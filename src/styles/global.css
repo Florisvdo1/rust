@@ -1,0 +1,221 @@
+/* RUST Design System – Global Stylesheet */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+  /* Color tokens */
+  --c-bg: #0f1a2e;
+  --c-bg2: #131f33;
+  --c-surface: #1a2740;
+  --c-surface2: #1e2e48;
+  --c-surface3: #243352;
+  --c-border: #2a3d5a;
+  --c-border2: #334a6a;
+  --c-granite: #3a5070;
+  --c-blue: #4a78a8;
+  --c-muted-blue: #5b8aad;
+  --c-baby-blue: #7fb3d3;
+  --c-pale-mist: #a8c8e0;
+  --c-accent: #6896c8;
+  --c-accent2: #4e74a8;
+  --c-text-primary: #e8eef5;
+  --c-text-secondary: #9ab0c8;
+  --c-text-muted: #6a85a0;
+  --c-text-subtle: #4a6480;
+  --c-success: #4a9970;
+  --c-warning: #c89040;
+  --c-error: #a04040;
+  --c-white: #ffffff;
+
+  /* Gradient */
+  --g-bg: linear-gradient(160deg, #0f1a2e 0%, #131f33 40%, #1a2740 100%);
+  --g-surface: linear-gradient(135deg, #1a2740 0%, #1e2e48 100%);
+  --g-accent: linear-gradient(135deg, #4a78a8 0%, #6896c8 100%);
+  --g-card: linear-gradient(135deg, #1e2e48 0%, #243352 100%);
+
+  /* Typography */
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --fs-xs: 11px;
+  --fs-sm: 13px;
+  --fs-base: 15px;
+  --fs-md: 17px;
+  --fs-lg: 20px;
+  --fs-xl: 24px;
+  --fs-2xl: 30px;
+  --fs-3xl: 38px;
+
+  /* Spacing */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-8: 32px;
+  --sp-10: 40px;
+  --sp-12: 48px;
+  --sp-16: 64px;
+
+  /* Radius */
+  --r-sm: 6px;
+  --r-md: 10px;
+  --r-lg: 16px;
+  --r-xl: 20px;
+  --r-2xl: 28px;
+  --r-full: 999px;
+
+  /* Shadows */
+  --sh-sm: 0 1px 3px rgba(0,0,0,0.3);
+  --sh-md: 0 4px 12px rgba(0,0,0,0.4);
+  --sh-lg: 0 8px 24px rgba(0,0,0,0.5);
+  --sh-xl: 0 16px 40px rgba(0,0,0,0.6);
+  --sh-accent: 0 4px 20px rgba(74,120,168,0.3);
+
+  /* Motion */
+  --t-fast: 120ms ease;
+  --t-base: 200ms ease;
+  --t-slow: 350ms ease;
+  --t-spring: 300ms cubic-bezier(0.34,1.56,0.64,1);
+
+  /* Safe areas */
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+
+  /* Nav */
+  --nav-h: 68px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --t-fast: 0ms;
+    --t-base: 0ms;
+    --t-slow: 0ms;
+    --t-spring: 0ms;
+  }
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html {
+  height: 100%;
+  overflow: hidden;
+  touch-action: manipulation;
+}
+
+body {
+  height: 100%;
+  overflow: hidden;
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  color: var(--c-text-primary);
+  background: var(--c-bg);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior: none;
+}
+
+#root {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+button {
+  font-family: var(--font);
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: inherit;
+}
+
+input, textarea {
+  font-family: var(--font);
+  font-size: var(--fs-base);
+  color: var(--c-text-primary);
+  background: var(--c-surface2);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-md);
+  padding: var(--sp-3) var(--sp-4);
+  outline: none;
+  width: 100%;
+  transition: border-color var(--t-base);
+}
+
+input:focus, textarea:focus {
+  border-color: var(--c-accent);
+}
+
+textarea {
+  resize: none;
+  line-height: 1.6;
+}
+
+input::placeholder, textarea::placeholder {
+  color: var(--c-text-subtle);
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--c-border2);
+  border-radius: 2px;
+}
+
+/* Utility classes */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.text-primary { color: var(--c-text-primary); }
+.text-secondary { color: var(--c-text-secondary); }
+.text-muted { color: var(--c-text-muted); }
+.text-accent { color: var(--c-accent); }
+
+.card {
+  background: var(--g-card);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-lg);
+  padding: var(--sp-4);
+}
+
+.btn-primary {
+  background: var(--g-accent);
+  color: white;
+  border-radius: var(--r-md);
+  padding: var(--sp-3) var(--sp-5);
+  font-size: var(--fs-base);
+  font-weight: 500;
+  transition: opacity var(--t-base), transform var(--t-fast);
+  box-shadow: var(--sh-accent);
+}
+.btn-primary:active { opacity: 0.85; transform: scale(0.98); }
+
+.btn-ghost {
+  color: var(--c-text-secondary);
+  border-radius: var(--r-md);
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-base);
+  transition: background var(--t-base);
+}
+.btn-ghost:hover, .btn-ghost:active { background: var(--c-surface2); }

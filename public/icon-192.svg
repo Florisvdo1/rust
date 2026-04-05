@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" fill="none">
+  <rect width="192" height="192" rx="44" fill="#1a2740"/>
+  <rect x="3" y="3" width="186" height="186" rx="42" stroke="#2a3d5a" stroke-width="2"/>
+  <!-- Subtle gradient overlay -->
+  <rect x="3" y="3" width="186" height="93" rx="42" fill="url(#topGrad)" opacity="0.3"/>
+  <!-- Circle breathing element -->
+  <circle cx="96" cy="90" r="42" stroke="#3a5070" stroke-width="2" fill="none" opacity="0.5"/>
+  <circle cx="96" cy="90" r="30" stroke="#4a78a8" stroke-width="1.5" fill="none" opacity="0.4"/>
+  <!-- R lettermark -->
+  <text x="96" y="108" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="700" font-size="68" fill="#7fb3d3" letter-spacing="4">R</text>
+  <!-- Bottom wordmark -->
+  <text x="96" y="155" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="500" font-size="18" fill="#4a78a8" letter-spacing="6">RUST</text>
+  <defs>
+    <linearGradient id="topGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#7fb3d3"/>
+      <stop offset="1" stop-color="#1a2740"/>
+    </linearGradient>
+  </defs>
+</svg>

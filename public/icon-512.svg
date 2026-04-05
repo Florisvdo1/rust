@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="110" fill="#1a2740"/>
+  <rect x="4" y="4" width="504" height="504" rx="107" stroke="#2a3d5a" stroke-width="3"/>
+  <circle cx="256" cy="230" r="108" stroke="#3a5070" stroke-width="3" fill="none" opacity="0.5"/>
+  <circle cx="256" cy="230" r="76" stroke="#4a78a8" stroke-width="2" fill="none" opacity="0.4"/>
+  <text x="256" y="284" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="700" font-size="168" fill="#7fb3d3" letter-spacing="8">R</text>
+  <text x="256" y="400" text-anchor="middle" font-family="Inter,system-ui,sans-serif" font-weight="500" font-size="44" fill="#4a78a8" letter-spacing="16">RUST</text>
+</svg>
