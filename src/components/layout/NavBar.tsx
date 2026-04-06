@@ -49,13 +49,14 @@ export function NavBar() {
 
   return (
     <nav style={{
-      background: 'rgba(15,26,46,0.97)',
-      borderTop: '1px solid var(--c-border)',
-      paddingBottom: 'var(--safe-bottom)',
-      backdropFilter: 'blur(20px)',
-      WebkitBackdropFilter: 'blur(20px)',
+      background: 'rgba(15,26,46,0.88)',
+      borderTop: '1px solid rgba(42,61,90,0.6)',
+      paddingBottom: 'max(var(--safe-bottom), 6px)',
+      backdropFilter: 'blur(24px) saturate(1.4)',
+      WebkitBackdropFilter: 'blur(24px) saturate(1.4)',
       flexShrink: 0,
-      zIndex: 100
+      zIndex: 100,
+      position: 'relative',
     }}>
       <div style={{
         display: 'flex',

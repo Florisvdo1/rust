@@ -5,21 +5,43 @@ export function LoadingScreen() {
     <div style={{
       position: 'absolute', inset: 0,
       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-      background: 'var(--g-bg)', gap: 16
+      background: 'var(--g-bg)', gap: 20
     }}>
-      <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-        <rect x="4" y="4" width="40" height="40" rx="12" fill="var(--c-surface)" stroke="var(--c-border)" strokeWidth="1"/>
-        <text x="24" y="31" textAnchor="middle" fontFamily="Inter,sans-serif" fontWeight="700" fontSize="20" fill="var(--c-baby-blue)" letterSpacing="2">R</text>
+      <svg width="120" height="48" viewBox="0 0 120 48" fill="none" aria-label="RUST">
+        <defs>
+          <linearGradient id="loadGrad" x1="0" y1="0" x2="120" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stopColor="#6896c8"/>
+            <stop offset="100%" stopColor="#a8c8e0"/>
+          </linearGradient>
+        </defs>
+        <text
+          x="60" y="36"
+          textAnchor="middle"
+          fontFamily="Inter, sans-serif"
+          fontWeight="800"
+          fontSize="32"
+          letterSpacing="8"
+          fill="url(#loadGrad)"
+        >RUST</text>
       </svg>
       <div style={{
-        width: 32, height: 3, borderRadius: 2,
+        width: 40, height: 3, borderRadius: 2,
         background: 'var(--c-surface2)', overflow: 'hidden'
       }}>
         <div style={{
-          height: '100%', background: 'var(--c-accent)',
+          height: '100%', background: 'var(--g-accent)',
           animation: 'loading 1.2s ease-in-out infinite',
           borderRadius: 2
         }} />
+      </div>
+      <div style={{
+        fontSize: 'var(--fs-xs)',
+        color: 'var(--c-text-subtle)',
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+        fontWeight: 500,
+      }}>
+        Kalme dagelijkse ondersteuning
       </div>
       <style>{`
         @keyframes loading {

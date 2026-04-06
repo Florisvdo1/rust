@@ -82,12 +82,12 @@ export async function seedDemoData() {
   // Medication seed
   await saveMedication({
     id: uid(),
-    name: 'Ritalin',
-    dose: '10mg',
-    times: ['08:00', '12:00'],
-    taken: { [today]: [false, false] },
-    notes: 'Met een glas water innemen',
-    refillDate: format(addDays(new Date(), 14), 'yyyy-MM-dd'),
+    name: 'Magnesium',
+    dose: '1 pil',
+    times: ['08:00'],
+    taken: { [today]: [false] },
+    notes: 'Bij het ontbijt met een glas water',
+    refillDate: format(addDays(new Date(), 30), 'yyyy-MM-dd'),
     createdAt: now,
     updatedAt: now
   })
