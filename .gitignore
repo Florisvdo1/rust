@@ -23,4 +23,6 @@ dist-ssr
 *.sw?
 .env
 backups/
-rust.tar.gz
+*.tar.gz
+
+.vercel
