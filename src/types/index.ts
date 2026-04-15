@@ -18,6 +18,11 @@ export interface PlannerItem {
   color: string
   iconId: string
   notes?: string
+  source?: 'gezondheid'
+  healthType?: 'supplement' | 'medicatie' | 'overig'
+  healthDosage?: string
+  healthQuantity?: number
+  healthNote?: string
   createdAt: string
 }
 

@@ -22,6 +22,8 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onComplete, onGuest }) => {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
+  const [showPassword, setShowPassword] = useState(false)
+  const [showPasswordConfirm, setShowPasswordConfirm] = useState(false)
 
   const handleGuest = () => {
     setGuest(true)
@@ -301,20 +303,45 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onComplete, onGuest }) => {
                 <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.55)', marginBottom: 6, display: 'block' }}>
                   Wachtwoord
                 </label>
-                <input
-                  type="password"
-                  placeholder="Minimaal 6 tekens"
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-                  style={{
-                    width: '100%', padding: '14px 16px',
-                    background: 'rgba(255,255,255,0.1)',
-                    border: '1px solid rgba(255,255,255,0.2)',
-                    borderRadius: 12, fontSize: 16, color: 'white',
-                    minHeight: 50,
-                  }}
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Minimaal 6 tekens"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
+                    style={{
+                      width: '100%', padding: '14px 48px 14px 16px',
+                      background: 'rgba(255,255,255,0.1)',
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      borderRadius: 12, fontSize: 16, color: 'white',
+                      minHeight: 50,
+                    }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(v => !v)}
+                    aria-label={showPassword ? 'Verberg wachtwoord' : 'Toon wachtwoord'}
+                    style={{
+                      position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                      color: 'rgba(255,255,255,0.5)', background: 'none', border: 'none',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      padding: 4, cursor: 'pointer',
+                    }}
+                  >
+                    {showPassword ? (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                        <line x1="1" y1="1" x2="23" y2="23"/>
+                      </svg>
+                    ) : (
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                      </svg>
+                    )}
+                  </button>
+                </div>
                 {mode === 'register' && (
                   <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 6, lineHeight: 1.5 }}>
                     Schrijf je wachtwoord ergens veilig op. Wachtwoord wijzigen is in deze versie nog niet beschikbaar.
@@ -327,20 +354,45 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onComplete, onGuest }) => {
                   <label style={{ fontSize: 12, fontWeight: 600, color: 'rgba(255,255,255,0.55)', marginBottom: 6, display: 'block' }}>
                     Wachtwoord bevestigen
                   </label>
-                  <input
-                    type="password"
-                    placeholder="Herhaal wachtwoord"
-                    value={passwordConfirm}
-                    onChange={e => setPasswordConfirm(e.target.value)}
-                    autoComplete="new-password"
-                    style={{
-                      width: '100%', padding: '14px 16px',
-                      background: 'rgba(255,255,255,0.1)',
-                      border: '1px solid rgba(255,255,255,0.2)',
-                      borderRadius: 12, fontSize: 16, color: 'white',
-                      minHeight: 50,
-                    }}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showPasswordConfirm ? 'text' : 'password'}
+                      placeholder="Herhaal wachtwoord"
+                      value={passwordConfirm}
+                      onChange={e => setPasswordConfirm(e.target.value)}
+                      autoComplete="new-password"
+                      style={{
+                        width: '100%', padding: '14px 48px 14px 16px',
+                        background: 'rgba(255,255,255,0.1)',
+                        border: '1px solid rgba(255,255,255,0.2)',
+                        borderRadius: 12, fontSize: 16, color: 'white',
+                        minHeight: 50,
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPasswordConfirm(v => !v)}
+                      aria-label={showPasswordConfirm ? 'Verberg wachtwoord' : 'Toon wachtwoord'}
+                      style={{
+                        position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)',
+                        color: 'rgba(255,255,255,0.5)', background: 'none', border: 'none',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        padding: 4, cursor: 'pointer',
+                      }}
+                    >
+                      {showPasswordConfirm ? (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M17.94 17.94A10.07 10.07 0 0112 20c-7 0-11-8-11-8a18.45 18.45 0 015.06-5.94M9.9 4.24A9.12 9.12 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19m-6.72-1.07a3 3 0 11-4.24-4.24"/>
+                          <line x1="1" y1="1" x2="23" y2="23"/>
+                        </svg>
+                      ) : (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                          <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                      )}
+                    </button>
+                  </div>
                 </div>
               )}
 

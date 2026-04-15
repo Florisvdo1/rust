@@ -30,7 +30,6 @@ const CATEGORIES = [
 
 const ACTIVITIES = [
   // Ochtend
-  { id: 'wakker-worden', name: 'Wakker worden', cat: 'ochtend', color: '#d4a257', icon: 'sun' },
   { id: 'ochtendroutine', name: 'Ochtendroutine', cat: 'ochtend', color: '#d4a257', icon: 'sunrise' },
   { id: 'stretchen-ochtend', name: 'Ochtend strekken', cat: 'ochtend', color: '#d4a257', icon: 'stretch' },
   { id: 'dagplanning', name: 'Dagplanning', cat: 'ochtend', color: '#d4a257', icon: 'list' },
@@ -48,11 +47,11 @@ const ACTIVITIES = [
 
   // Verzorging
   { id: 'douchen', name: 'Douchen', cat: 'verzorging', color: '#d4a5a5', icon: 'droplet' },
+  { id: 'bad', name: 'Bad nemen', cat: 'verzorging', color: '#d4a5a5', icon: 'droplet' },
   { id: 'tanden-poetsen', name: 'Tanden poetsen', cat: 'verzorging', color: '#d4a5a5', icon: 'smile' },
   { id: 'skincare', name: 'Skincare', cat: 'verzorging', color: '#d4a5a5', icon: 'star' },
   { id: 'aankleden', name: 'Aankleden', cat: 'verzorging', color: '#d4a5a5', icon: 'shirt' },
   { id: 'haar', name: 'Haar doen', cat: 'verzorging', color: '#d4a5a5', icon: 'scissors' },
-  { id: 'bad', name: 'Bad nemen', cat: 'verzorging', color: '#d4a5a5', icon: 'droplet' },
 
   // Werk
   { id: 'werkblok', name: 'Werkblok', cat: 'werk', color: '#5c7a99', icon: 'briefcase' },
@@ -66,7 +65,6 @@ const ACTIVITIES = [
   // Focus
   { id: 'deep-work', name: 'Deep work', cat: 'focus', color: '#9cadbc', icon: 'zap' },
   { id: 'pauze', name: 'Pauze', cat: 'focus', color: '#9cadbc', icon: 'clock' },
-  { id: 'pomodoro', name: 'Pomodoro', cat: 'focus', color: '#9cadbc', icon: 'clock' },
   { id: 'schrijven', name: 'Schrijven', cat: 'focus', color: '#9cadbc', icon: 'pencil' },
   { id: 'lezen', name: 'Lezen', cat: 'focus', color: '#9cadbc', icon: 'book' },
   { id: 'plannen', name: 'Plannen', cat: 'focus', color: '#9cadbc', icon: 'list' },
@@ -78,6 +76,9 @@ const ACTIVITIES = [
   { id: 'was', name: 'Was', cat: 'huishouden', color: '#a8c5a0', icon: 'wind' },
   { id: 'stofzuigen', name: 'Stofzuigen', cat: 'huishouden', color: '#a8c5a0', icon: 'wind' },
   { id: 'ramen', name: 'Ramen lappen', cat: 'huishouden', color: '#a8c5a0', icon: 'droplet' },
+  { id: 'dwijlen', name: 'Dwijlen', cat: 'huishouden', color: '#a8c5a0', icon: 'mop' },
+  { id: 'droger', name: 'Droger', cat: 'huishouden', color: '#a8c5a0', icon: 'dryer' },
+  { id: 'bed-verschonen', name: 'Bed verschonen', cat: 'huishouden', color: '#a8c5a0', icon: 'bed' },
 
   // Gezondheid
   { id: 'medicatie', name: 'Medicatie', cat: 'gezondheid', color: '#e8a87c', icon: 'pill' },
@@ -111,6 +112,7 @@ const ACTIVITIES = [
   { id: 'afspraak', name: 'Afspraak', cat: 'sociaal', color: '#c3a6c9', icon: 'calendar' },
   { id: 'bellen-sociaal', name: 'Bellen', cat: 'sociaal', color: '#c3a6c9', icon: 'phone' },
   { id: 'bezoek', name: 'Bezoek', cat: 'sociaal', color: '#c3a6c9', icon: 'home' },
+  { id: 'whatsapp-bekijken', name: 'WhatsApp bekijken', cat: 'sociaal', color: '#c3a6c9', icon: 'whatsapp' },
 
   // Reizen
   { id: 'ov', name: 'OV reizen', cat: 'reizen', color: '#8b9dbc', icon: 'map-pin' },
@@ -143,7 +145,6 @@ const ACTIVITIES = [
 
   // Slapen
   { id: 'bedtijd', name: 'Bedtijd', cat: 'slapen', color: '#8da8c4', icon: 'moon' },
-  { id: 'slapen', name: 'Slapen', cat: 'slapen', color: '#8da8c4', icon: 'moon' },
   { id: 'opstaan', name: 'Opstaan', cat: 'slapen', color: '#8da8c4', icon: 'sun' },
 
   // Therapie
@@ -207,6 +208,17 @@ const ActivityIcon: React.FC<{ id: string; color?: string; size?: number }> = ({
     case 'file': return <svg {...props}><path d="M13 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V9z"/><path d="M13 2v7h7"/></svg>
     case 'pen': return <svg {...props}><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
     case 'camera': return <svg {...props}><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+    case 'mop': return <svg {...props}><path d="M12 2v13"/><path d="M8 15h8"/><path d="M9 15l-2 7h10l-2-7"/></svg>
+    case 'dryer': return <svg {...props}><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="2"/></svg>
+    case 'bed': return <svg {...props}><path d="M2 8h20v10a2 2 0 01-2 2H4a2 2 0 01-2-2V8z"/><path d="M2 13h20"/><path d="M5 8V5a1 1 0 011-1h12a1 1 0 011 1v3"/></svg>
+    case 'whatsapp': return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={{ overflow: 'visible' }}>
+        <path d="M21 11.5a8.38 8.38 0 01-.9 3.8 8.5 8.5 0 01-7.6 4.7 8.38 8.38 0 01-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 01-.9-3.8 8.5 8.5 0 014.7-7.6 8.38 8.38 0 013.8-.9h.5a8.48 8.48 0 018 8v.5z" stroke={color} strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx="20" cy="4" r="4.5" fill="#ef4444"/>
+        <line x1="20" y1="2" x2="20" y2="5" stroke="white" strokeWidth="1.5" strokeLinecap="round"/>
+        <circle cx="20" cy="6.5" r="0.7" fill="white"/>
+      </svg>
+    )
     default: return <svg {...props}><circle cx="12" cy="12" r="4"/></svg>
   }
 }
@@ -272,7 +284,7 @@ function dayLabel(offset: number) {
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 export const PlannerPage: React.FC = () => {
-  const { plannerItems, addPlannerItem, removePlannerItem } = useStore()
+  const { plannerItems, addPlannerItem, removePlannerItem, updatePlannerItem } = useStore()
   const [selectedDay, setSelectedDay] = useState(0)
   const [trayOpen, setTrayOpen] = useState(false)
   const [traySearch, setTraySearch] = useState('')
@@ -280,6 +292,8 @@ export const PlannerPage: React.FC = () => {
   const [selectedActivity, setSelectedActivity] = useState<typeof ACTIVITIES[0] | null>(null)
   const [selectedDuration, setSelectedDuration] = useState<number>(30)
   const [placingMode, setPlacingMode] = useState(false)
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null)
+  const [noteText, setNoteText] = useState('')
   const timelineRef = useRef<HTMLDivElement>(null)
 
   const currentDate = dayOffset(selectedDay)
@@ -437,8 +451,8 @@ export const PlannerPage: React.FC = () => {
                       display: 'flex',
                       alignItems: 'center',
                       gap: 5,
-                      overflow: 'hidden',
-                      zIndex: 5,
+                      overflow: editingNoteId === item.id ? 'visible' : 'hidden',
+                      zIndex: editingNoteId === item.id ? 10 : 5,
                       marginLeft: itemLayout.col > 0 ? 2 : 0,
                     }}
                   >
@@ -454,7 +468,27 @@ export const PlannerPage: React.FC = () => {
                           {item.duration}m
                         </p>
                       )}
+                      {item.notes && heightPx >= 34 && (
+                        <p style={{ fontSize: 9, color: item.color, fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {item.notes.slice(0, 22)}
+                        </p>
+                      )}
                     </div>
+                    <button
+                      onPointerDown={e => e.stopPropagation()}
+                      onClick={e => { e.stopPropagation(); setEditingNoteId(item.id); setNoteText(item.notes || '') }}
+                      style={{
+                        flexShrink: 0, width: 18, height: 18,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        background: 'rgba(255,255,255,0.7)', borderRadius: '50%',
+                        padding: 0,
+                      }}
+                      aria-label="Notitie bewerken"
+                    >
+                      <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke={item.color} strokeWidth="2.5" strokeLinecap="round">
+                        <path d="M17 3a2.828 2.828 0 114 4L7.5 20.5 2 22l1.5-5.5L17 3z"/>
+                      </svg>
+                    </button>
                     <button
                       onPointerDown={e => { e.stopPropagation(); haptic('light') }}
                       onClick={e => { e.stopPropagation(); removePlannerItem(item.id) }}
@@ -467,6 +501,32 @@ export const PlannerPage: React.FC = () => {
                       }}
                       aria-label="Verwijder"
                     >×</button>
+                    {editingNoteId === item.id && (
+                      <input
+                        value={noteText}
+                        onChange={e => setNoteText(e.target.value)}
+                        onBlur={() => { updatePlannerItem(item.id, { notes: noteText }); setEditingNoteId(null) }}
+                        onKeyDown={e => {
+                          if (e.key === 'Enter') { updatePlannerItem(item.id, { notes: noteText }); setEditingNoteId(null) }
+                          if (e.key === 'Escape') setEditingNoteId(null)
+                        }}
+                        onClick={e => e.stopPropagation()}
+                        autoFocus
+                        placeholder="Notitie..."
+                        style={{
+                          position: 'absolute',
+                          top: '100%', left: 0, right: 0,
+                          background: 'var(--white)',
+                          border: `1.5px solid ${item.color}`,
+                          borderRadius: 6,
+                          padding: '5px 8px',
+                          fontSize: 11,
+                          zIndex: 20,
+                          boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                          marginTop: 2,
+                        }}
+                      />
+                    )}
                   </motion.div>
                 )
               })}
