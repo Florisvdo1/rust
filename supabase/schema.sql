@@ -1,5 +1,6 @@
 -- RUST App — Supabase Schema
 -- Run this in the Supabase SQL Editor
+-- Idempotent: safe to run multiple times
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
@@ -137,3 +138,12 @@ CREATE INDEX IF NOT EXISTS idx_places_user_id ON places(user_id);
 CREATE INDEX IF NOT EXISTS idx_journal_entries_user_date ON journal_entries(user_id, date);
 CREATE INDEX IF NOT EXISTS idx_health_logs_user_date ON health_logs(user_id, date);
 CREATE INDEX IF NOT EXISTS idx_daily_health_user_date ON daily_health(user_id, date);
+
+-- Idempotent column additions (run if schema was created without these)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS avatar_url TEXT;
+ALTER TABLE places ADD COLUMN IF NOT EXISTS where_precisely TEXT;
+ALTER TABLE places ADD COLUMN IF NOT EXISTS subzone TEXT;
+ALTER TABLE places ADD COLUMN IF NOT EXISTS container TEXT;
+ALTER TABLE places ADD COLUMN IF NOT EXISTS position TEXT;
+ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS breathing_chime BOOLEAN DEFAULT FALSE;
+ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS start_tone BOOLEAN DEFAULT FALSE;

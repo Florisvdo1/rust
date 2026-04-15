@@ -160,7 +160,7 @@ export const OnthoudenPage: React.FC = () => {
       {!showAdd && (
         <motion.button whileTap={{ scale: 0.9 }} onClick={() => { resetForm(); setShowAdd(true) }}
           style={{
-            position: 'fixed', bottom: 'calc(var(--nav-height) + var(--safe-bottom) + 16px)',
+            position: 'fixed', bottom: 'calc(var(--bottom-nav-height) + var(--safe-bottom) + 16px)',
             right: 20, width: 56, height: 56, borderRadius: '50%',
             background: 'var(--granite-blue)', color: 'var(--white)',
             fontSize: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',

@@ -25,10 +25,7 @@ function getGreeting(): string {
 
 function formatDate(): string {
   return new Date().toLocaleDateString('nl-NL', {
-    weekday: 'long',
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   })
 }
 
@@ -37,37 +34,69 @@ function getDailyTip(): string {
   return tips[day]
 }
 
-const QuickAction: React.FC<{
-  icon: React.ReactNode
-  label: string
-  onClick: () => void
-  delay: number
-}> = ({ icon, label, onClick, delay }) => (
-  <motion.button
-    initial={{ opacity: 0, y: 12 }}
-    animate={{ opacity: 1, y: 0 }}
-    transition={{ delay, duration: 0.35 }}
-    onClick={onClick}
-    style={{
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      gap: 8,
-      padding: '16px 8px',
-      background: 'var(--white)',
-      borderRadius: 'var(--radius-lg)',
-      boxShadow: 'var(--shadow-sm)',
-      border: '1px solid var(--border)',
-      flex: 1,
-      minWidth: 0,
-      minHeight: 80,
-      touchAction: 'manipulation',
-    }}
-  >
-    <div style={{ color: 'var(--soft-blue)' }}>{icon}</div>
-    <span style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', textAlign: 'center', lineHeight: 1.2 }}>{label}</span>
-  </motion.button>
-)
+// Premium module shortcuts
+const MODULES = [
+  {
+    id: 'onthouden', label: 'Onthouden', path: '/onthouden',
+    desc: 'Notities & herinneringen', color: '#d4a257',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
+        <path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'planner', label: 'Planner', path: '/planner',
+    desc: 'Dag indelen', color: '#5c7a99',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2"/>
+        <path d="M16 2v4M8 2v4M3 10h18"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'ademhaling', label: 'Ademhaling', path: '/ademhaling',
+    desc: 'Rust vinden', color: '#95b8d1',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12 4c-2 3-5 5-5 9a5 5 0 0010 0c0-4-3-6-5-9z"/>
+        <path d="M12 13v4"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'dagboek', label: 'Dagboek', path: '/dagboek',
+    desc: 'Hoe gaat het?', color: '#81b29a',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 4h4v16H4z"/>
+        <path d="M8 4h12v16H8"/>
+        <path d="M12 8h4M12 12h4M12 16h2"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'gezondheid', label: 'Gezondheid', path: '/gezondheid',
+    desc: 'Water, slaap, medicatie', color: '#e8a87c',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+      </svg>
+    ),
+  },
+  {
+    id: 'plaatsen', label: 'Plaatsen', path: '/plaatsen',
+    desc: 'Waar heb ik het gelaten?', color: '#a8c5a0',
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+        <circle cx="12" cy="10" r="3"/>
+      </svg>
+    ),
+  },
+]
 
 export const VandaagPage: React.FC = () => {
   const navigate = useNavigate()
@@ -89,22 +118,16 @@ export const VandaagPage: React.FC = () => {
       {/* Header */}
       <div style={{ paddingTop: 'calc(var(--safe-top) + 20px)', paddingBottom: 8 }}>
         <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
           style={{ fontSize: 13, color: 'var(--text-muted)', textTransform: 'capitalize', marginBottom: 4 }}
         >
           {formatDate()}
         </motion.p>
         <motion.h1
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
           style={{
-            fontFamily: 'var(--font-display)',
-            fontSize: 30,
-            fontWeight: 700,
-            color: 'var(--granite-blue)',
-            letterSpacing: '-0.03em',
+            fontFamily: 'var(--font-display)', fontSize: 30, fontWeight: 700,
+            color: 'var(--granite-blue)', letterSpacing: '-0.03em',
           }}
         >
           {getGreeting()}
@@ -113,68 +136,25 @@ export const VandaagPage: React.FC = () => {
 
       {/* Daily tip card */}
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.15 }}
+        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
         style={{
           background: 'linear-gradient(135deg, var(--granite-blue) 0%, var(--soft-blue) 100%)',
-          borderRadius: 'var(--radius-xl)',
-          padding: 'var(--space-xl)',
-          marginTop: 'var(--space-lg)',
-          color: 'var(--white)',
-          position: 'relative',
-          overflow: 'hidden',
+          borderRadius: 'var(--radius-xl)', padding: 'var(--space-xl)',
+          marginTop: 'var(--space-lg)', color: 'var(--white)',
+          position: 'relative', overflow: 'hidden',
         }}
       >
-        <div style={{
-          position: 'absolute', top: -20, right: -20, width: 100, height: 100,
-          borderRadius: '50%', background: 'rgba(255,255,255,0.06)',
-        }} />
-        <div style={{
-          position: 'absolute', bottom: -30, left: -10, width: 80, height: 80,
-          borderRadius: '50%', background: 'rgba(255,255,255,0.04)',
-        }} />
+        <div style={{ position: 'absolute', top: -20, right: -20, width: 100, height: 100, borderRadius: '50%', background: 'rgba(255,255,255,0.06)' }} />
+        <div style={{ position: 'absolute', bottom: -30, left: -10, width: 80, height: 80, borderRadius: '50%', background: 'rgba(255,255,255,0.04)' }} />
         <p style={{ fontSize: 11, fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', opacity: 0.7, marginBottom: 8 }}>
           Tip van de dag
         </p>
-        <p style={{ fontSize: 15, lineHeight: 1.5, fontWeight: 400 }}>
-          {getDailyTip()}
-        </p>
+        <p style={{ fontSize: 15, lineHeight: 1.5, fontWeight: 400 }}>{getDailyTip()}</p>
       </motion.div>
-
-      {/* Quick actions */}
-      <div style={{ display: 'flex', gap: 10, marginTop: 'var(--space-xl)' }}>
-        <QuickAction
-          delay={0.2}
-          label="Planner"
-          onClick={() => navigate('/planner')}
-          icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>}
-        />
-        <QuickAction
-          delay={0.25}
-          label="Ademhaling"
-          onClick={() => navigate('/ademhaling')}
-          icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 4c-2 3-5 5-5 9a5 5 0 0010 0c0-4-3-6-5-9z"/></svg>}
-        />
-        <QuickAction
-          delay={0.3}
-          label="Dagboek"
-          onClick={() => navigate('/dagboek')}
-          icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 4h4v16H4z"/><path d="M8 4h12v16H8"/></svg>}
-        />
-        <QuickAction
-          delay={0.35}
-          label="Gezondheid"
-          onClick={() => navigate('/gezondheid')}
-          icon={<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>}
-        />
-      </div>
 
       {/* Today's schedule overview */}
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4 }}
+        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
         style={{ marginTop: 'var(--space-xl)' }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -184,45 +164,26 @@ export const VandaagPage: React.FC = () => {
 
         {todayItems.length === 0 ? (
           <div style={{
-            background: 'var(--white)',
-            borderRadius: 'var(--radius-lg)',
-            padding: 'var(--space-2xl)',
-            textAlign: 'center',
-            border: '1px solid var(--border)',
+            background: 'var(--white)', borderRadius: 'var(--radius-lg)',
+            padding: 'var(--space-2xl)', textAlign: 'center', border: '1px solid var(--border)',
           }}>
             <p style={{ fontSize: 14, color: 'var(--text-muted)' }}>Nog niets gepland voor vandaag</p>
-            <button
-              onClick={() => navigate('/planner')}
-              style={{
-                marginTop: 12,
-                padding: '10px 20px',
-                background: 'var(--accent-soft)',
-                color: 'var(--granite-blue)',
-                borderRadius: 'var(--radius-full)',
-                fontSize: 13,
-                fontWeight: 600,
-              }}
-            >
-              Plan je dag
-            </button>
+            <button onClick={() => navigate('/planner')} style={{
+              marginTop: 12, padding: '10px 20px', background: 'var(--accent-soft)',
+              color: 'var(--granite-blue)', borderRadius: 'var(--radius-full)',
+              fontSize: 13, fontWeight: 600,
+            }}>Plan je dag</button>
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {todayItems.slice(0, 5).map(item => (
               <div key={item.id} style={{
-                background: 'var(--white)',
-                borderRadius: 'var(--radius-md)',
-                padding: '12px 16px',
-                border: '1px solid var(--border)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
+                background: 'var(--white)', borderRadius: 'var(--radius-md)',
+                padding: '12px 16px', border: '1px solid var(--border)',
+                display: 'flex', alignItems: 'center', gap: 12,
               }}>
-                <div style={{
-                  width: 4, height: 32, borderRadius: 2,
-                  background: item.color || 'var(--mist-blue)',
-                }} />
-                <div style={{ flex: 1 }}>
+                <div style={{ width: 4, height: 32, borderRadius: 2, background: item.color || 'var(--mist-blue)' }} />
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: 14, fontWeight: 600 }}>{item.activityName}</p>
                   <p style={{ fontSize: 12, color: 'var(--text-muted)' }}>
                     {String(item.hour).padStart(2, '0')}:{String(item.quarter * 15).padStart(2, '0')} · {item.duration} min
@@ -237,9 +198,7 @@ export const VandaagPage: React.FC = () => {
       {/* Pinned notes */}
       {pinnedNotes.length > 0 && (
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
           style={{ marginTop: 'var(--space-xl)' }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -249,55 +208,58 @@ export const VandaagPage: React.FC = () => {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {pinnedNotes.slice(0, 3).map(note => (
               <div key={note.id} style={{
-                background: 'var(--white)',
-                borderRadius: 'var(--radius-md)',
-                padding: '12px 16px',
-                border: '1px solid var(--border)',
+                background: 'var(--white)', borderRadius: 'var(--radius-md)',
+                padding: '12px 16px', border: '1px solid var(--border)',
               }}>
                 <p style={{ fontSize: 14, fontWeight: 600 }}>{note.title}</p>
-                {note.content && <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>{note.content.slice(0, 60)}{note.content.length > 60 ? '…' : ''}</p>}
+                {note.content && (
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>
+                    {note.content.slice(0, 60)}{note.content.length > 60 ? '…' : ''}
+                  </p>
+                )}
               </div>
             ))}
           </div>
         </motion.div>
       )}
 
-      {/* Module shortcuts */}
+      {/* Premium module shortcut cards */}
       <motion.div
-        initial={{ opacity: 0, y: 12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.55 }}
+        initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}
         style={{ marginTop: 'var(--space-xl)', marginBottom: 'var(--space-xl)' }}
       >
         <h2 style={{ fontSize: 17, fontWeight: 700, color: 'var(--granite-blue)', marginBottom: 12 }}>Modules</h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          {[
-            { label: 'Onthouden', path: '/onthouden', color: '#e8a87c' },
-            { label: 'Plaatsen', path: '/plaatsen', color: '#81b29a' },
-            { label: 'Gezondheid', path: '/gezondheid', color: '#d4a5a5' },
-            { label: 'Instellingen', path: '/meer', color: '#9cadbc' },
-          ].map(mod => (
-            <button
-              key={mod.path}
+          {MODULES.map((mod, i) => (
+            <motion.button
+              key={mod.id}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45 + i * 0.05 }}
               onClick={() => navigate(mod.path)}
               style={{
-                background: 'var(--white)',
-                borderRadius: 'var(--radius-lg)',
-                padding: '16px',
+                background: 'var(--white)', borderRadius: 'var(--radius-lg)',
+                padding: '14px 14px 12px',
                 border: '1px solid var(--border)',
                 textAlign: 'left',
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                minHeight: 56,
+                display: 'flex', flexDirection: 'column', gap: 8,
+                minHeight: 88,
+                boxShadow: 'var(--shadow-sm)',
               }}
             >
               <div style={{
-                width: 8, height: 8, borderRadius: '50%',
-                background: mod.color,
-              }} />
-              <span style={{ fontSize: 14, fontWeight: 600 }}>{mod.label}</span>
-            </button>
+                width: 36, height: 36, borderRadius: 10,
+                background: mod.color + '18',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: mod.color,
+              }}>
+                {mod.icon}
+              </div>
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--granite-blue)', lineHeight: 1.2 }}>{mod.label}</p>
+                <p style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 2, lineHeight: 1.3 }}>{mod.desc}</p>
+              </div>
+            </motion.button>
           ))}
         </div>
       </motion.div>

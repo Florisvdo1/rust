@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '@/store'
 import { PageHeader } from '@/components/PageHeader'
 import { breathingExercises, durationChoices } from '@/lib/breathing'
+import { haptic, playBreathingPhaseChime, playBreathingStartChime } from '@/lib/haptics'
 import type { BreathingExercise, BreathPhase } from '@/types'
 
 type Stage = 'overview' | 'detail' | 'duration' | 'countdown' | 'active' | 'complete'
@@ -179,11 +180,14 @@ export const AdemhalingPage: React.FC = () => {
 
       setPhaseSecondsLeft(prev => {
         if (prev <= 1) {
-          // Move to next phase
+          // Move to next phase — fire haptic/chime on transition
           setCurrentPhaseIndex(pi => {
             const nextIndex = (pi + 1) % selectedExercise.phases.length
             if (nextIndex === 0) setCycleCount(c => c + 1)
             setPhaseSecondsLeft(selectedExercise.phases[nextIndex].duration)
+            // Haptic + optional chime on phase change
+            if (settings.breathingVibration) haptic('light')
+            if (settings.breathingChime) playBreathingPhaseChime()
             return nextIndex
           })
           return 0 // Will be immediately overwritten above
@@ -204,6 +208,8 @@ export const AdemhalingPage: React.FC = () => {
 
   const handleStartCountdown = () => {
     if (selectedDuration === 0) return
+    haptic('medium')
+    if (settings.startTone) playBreathingStartChime()
     setCountdown(3)
     setStage('countdown')
   }
@@ -282,12 +288,12 @@ export const AdemhalingPage: React.FC = () => {
   if (stage === 'detail' && selectedExercise) {
     const inst = selectedExercise.instructions
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
         <PageHeader
           title={selectedExercise.name}
           right={<button onClick={() => setStage('overview')} style={{ fontSize: 13, color: 'var(--soft-blue)', fontWeight: 600 }}>Terug</button>}
         />
-        <div className="page-scroll" style={{ padding: '0 var(--space-lg)' }}>
+        <div className="sheet-scroll" style={{ padding: '0 var(--space-lg)' }}>
           {/* Explanation card */}
           <div style={{
             background: 'var(--white)', borderRadius: 'var(--radius-xl)',
@@ -321,7 +327,7 @@ export const AdemhalingPage: React.FC = () => {
           </div>
 
           {/* Duration selection */}
-          <div style={{ marginBottom: 20 }}>
+          <div style={{ marginBottom: 12 }}>
             <p style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>Kies een duur</p>
             <div style={{ display: 'flex', gap: 8 }}>
               {durationChoices.map(d => (
@@ -335,14 +341,21 @@ export const AdemhalingPage: React.FC = () => {
               ))}
             </div>
           </div>
+        </div>
 
+        {/* Sticky start button — always visible */}
+        <div className="sticky-save-bar">
           <button
             onClick={handleStartCountdown}
             disabled={selectedDuration === 0}
             className="btn-primary"
-            style={{ width: '100%', marginBottom: 20 }}
+            style={{ width: '100%' }}
+            aria-label="Start oefening"
           >
-            Start oefening
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5,3 19,12 5,21"/>
+            </svg>
+            {selectedDuration === 0 ? 'Kies een duur' : 'Start oefening'}
           </button>
         </div>
       </div>

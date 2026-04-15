@@ -6,16 +6,17 @@ import { supabase } from '@/lib/supabase'
 
 const ROOMS = [
   'Woonkamer', 'Slaapkamer', 'Keuken', 'Badkamer', 'Kantoor', 'Gang',
-  'Berging', 'Auto', 'Tas', 'Jas', 'Broek', 'Schoenen', 'Rugzak',
-  'Portemonnee', 'Lade', 'Kast', 'Plank', 'Bureau', 'Nachtkastje',
-  'TV-meubel', 'Vensterbank', 'Balkon', 'Tuin', 'WC', 'Wasruimte',
-  'Schuur', 'Fiets', 'Scooter', 'Anders',
+  'Berging', 'Auto', 'Tas', 'Jas', 'Broek', 'Rugzak',
+  'Portemonnee', 'Fiets', 'Scooter', 'Schuur', 'Balkon', 'Tuin',
+  'Toilet', 'Wasruimte', 'Meterkast', 'Nachtkastje', 'Bureau',
+  'Bank', 'Kast', 'Lade', 'Plank', 'Kapstok', 'Sleutels', 'Anders',
 ]
 
 export const PlaatsenPage: React.FC = () => {
-  const { places, addPlace, updatePlace, removePlace } = useStore()
+  const { places, addPlace, updatePlace, removePlace, user } = useStore()
   const [showAdd, setShowAdd] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle')
 
   // Form fields
   const [room, setRoom] = useState('Woonkamer')
@@ -55,7 +56,7 @@ export const PlaatsenPage: React.FC = () => {
     setObjectLabel(''); setWherePrecisely(''); setSubzone(''); setContainer('')
     setPosition(''); setNotes(''); setRoom('Woonkamer'); setImageUrl('')
     setImagePreview(null); setEditId(null); setShowAdd(false)
-    setUploadError(null); setUploading(false)
+    setUploadError(null); setUploading(false); setSaveState('idle')
   }
 
   const openAdd = (preselectedRoom?: string) => {
@@ -69,42 +70,53 @@ export const PlaatsenPage: React.FC = () => {
     if (!file) return
     setUploadError(null)
 
-    // Local preview first
+    // Show local preview immediately
     const reader = new FileReader()
-    reader.onload = (ev) => {
-      setImagePreview(ev.target?.result as string)
-    }
+    reader.onload = (ev) => setImagePreview(ev.target?.result as string)
     reader.readAsDataURL(file)
 
-    // Upload to Supabase if configured
-    if (supabase) {
+    // Upload to Supabase storage when logged in
+    if (supabase && user) {
       setUploading(true)
       try {
-        const ext = file.name.split('.').pop()
-        const path = `places/${Date.now()}.${ext}`
-        const { error } = await supabase.storage.from('user-photos').upload(path, file, { upsert: true })
+        const ext = file.name.split('.').pop() || 'jpg'
+        const path = `${user.id}/places/${Date.now()}.${ext}`
+        const { error } = await supabase.storage
+          .from('user-photos')
+          .upload(path, file, { upsert: true })
         if (error) {
-          setUploadError('Foto kon niet worden opgeslagen in de cloud. Foto is lokaal zichtbaar.')
+          setUploadError('Foto opgeslagen als preview. Cloud upload mislukt.')
         } else {
-          const { data: urlData } = supabase.storage.from('user-photos').getPublicUrl(path)
+          const { data: urlData } = supabase.storage
+            .from('user-photos')
+            .getPublicUrl(path)
           setImageUrl(urlData.publicUrl)
         }
       } catch {
-        setUploadError('Upload mislukt. Foto is lokaal zichtbaar.')
+        setUploadError('Upload mislukt. Foto is als preview opgeslagen.')
       }
       setUploading(false)
+    } else if (!user) {
+      setUploadError('Niet ingelogd — foto alleen lokaal opgeslagen als preview.')
     }
   }
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!objectLabel.trim()) return
+    setSaveState('saving')
     const finalImageUrl = imageUrl || imagePreview || ''
-    if (editId) {
-      updatePlace(editId, { room, objectLabel, wherePrecisely, subzone, container, position, notes, imageUrl: finalImageUrl })
-    } else {
-      addPlace({ room, objectLabel, wherePrecisely, subzone, container, position, notes, imageUrl: finalImageUrl })
+
+    try {
+      if (editId) {
+        updatePlace(editId, { room, objectLabel, wherePrecisely, subzone, container, position, notes, imageUrl: finalImageUrl })
+      } else {
+        addPlace({ room, objectLabel, wherePrecisely, subzone, container, position, notes, imageUrl: finalImageUrl })
+      }
+      setSaveState('saved')
+      setTimeout(resetForm, 600)
+    } catch {
+      setSaveState('error')
     }
-    resetForm()
   }
 
   const startEdit = (p: typeof places[0]) => {
@@ -112,7 +124,7 @@ export const PlaatsenPage: React.FC = () => {
     setWherePrecisely(p.wherePrecisely || ''); setSubzone(p.subzone || '')
     setContainer(p.container || ''); setPosition(p.position || '')
     setNotes(p.notes || ''); setImageUrl(p.imageUrl || '')
-    setImagePreview(p.imageUrl || null)
+    setImagePreview(p.imageUrl || null); setSaveState('idle')
     setShowAdd(true)
   }
 
@@ -122,25 +134,27 @@ export const PlaatsenPage: React.FC = () => {
     return c
   }, [places])
 
+  const saveLabel = saveState === 'saving' ? 'Bezig...' :
+    saveState === 'saved' ? 'Opgeslagen ✓' :
+    saveState === 'error' ? 'Kon niet opslaan' :
+    uploading ? 'Foto wordt geüpload...' :
+    editId ? 'Opslaan' : 'Toevoegen'
+
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <PageHeader title="Plaatsen" subtitle="Waar heb ik het gelaten?" />
 
-      <div style={{ padding: '0 var(--space-lg)', marginBottom: 12 }}>
-        <input
-          type="text"
-          placeholder="Zoek voorwerp of plek..."
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          className="input-field"
-        />
+      <div style={{ padding: '0 var(--space-lg)', marginBottom: 10, flexShrink: 0 }}>
+        <input type="text" placeholder="Zoek voorwerp of plek..."
+          value={search} onChange={e => setSearch(e.target.value)}
+          className="input-field" />
       </div>
 
       {/* Room filters */}
       <div style={{
         display: 'flex', gap: 6, padding: '0 var(--space-lg)',
-        marginBottom: 12, overflowX: 'auto',
-        WebkitOverflowScrolling: 'touch',
+        marginBottom: 10, overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch', flexShrink: 0,
       }}>
         <button onClick={() => setFilterRoom(null)} style={{
           padding: '6px 14px', borderRadius: 'var(--radius-full)', fontSize: 12,
@@ -165,7 +179,8 @@ export const PlaatsenPage: React.FC = () => {
       <div className="page-scroll" style={{ padding: '0 var(--space-lg)' }}>
         {filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: 48, color: 'var(--text-muted)' }}>
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--border-strong)" strokeWidth="1.5" style={{ marginBottom: 12 }}>
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none"
+              stroke="var(--border-strong)" strokeWidth="1.5" style={{ marginBottom: 12 }}>
               <path d="M3 12l9-9 9 9"/><path d="M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
             </svg>
             <p style={{ fontSize: 14, marginBottom: 4 }}>Nog geen plekken opgeslagen</p>
@@ -182,7 +197,6 @@ export const PlaatsenPage: React.FC = () => {
                 }}
               >
                 <div style={{ display: 'flex', gap: 12 }}>
-                  {/* Photo or icon */}
                   <div style={{
                     width: 52, height: 52, borderRadius: 'var(--radius-md)',
                     background: p.imageUrl ? 'transparent' : 'var(--accent-soft)',
@@ -193,12 +207,13 @@ export const PlaatsenPage: React.FC = () => {
                       <img src={p.imageUrl} alt={p.objectLabel}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     ) : (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--soft-blue)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="var(--soft-blue)" strokeWidth="1.8" strokeLinecap="round">
                         <path d="M3 12l9-9 9 9"/><path d="M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
                       </svg>
                     )}
                   </div>
-                  <div style={{ flex: 1 }}>
+                  <div style={{ flex: 1, minWidth: 0 }}>
                     <h3 style={{ fontSize: 15, fontWeight: 600 }}>{p.objectLabel}</h3>
                     <p style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
                       {p.room}
@@ -220,18 +235,20 @@ export const PlaatsenPage: React.FC = () => {
         )}
       </div>
 
-      {/* FAB */}
+      {/* FAB — prefills active filter category */}
       {!showAdd && (
         <motion.button whileTap={{ scale: 0.9 }}
           onClick={() => openAdd(filterRoom || undefined)}
           style={{
             position: 'fixed',
-            bottom: 'calc(var(--nav-height) + var(--safe-bottom) + 16px)',
+            bottom: 'calc(var(--bottom-nav-height) + var(--safe-bottom) + 16px)',
             right: 20, width: 56, height: 56, borderRadius: '50%',
             background: 'var(--granite-blue)', color: 'var(--white)',
             fontSize: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
             boxShadow: 'var(--shadow-lg)', zIndex: 50,
-          }}>+</motion.button>
+          }}
+          aria-label="Plek toevoegen"
+        >+</motion.button>
       )}
 
       {/* Add/Edit Sheet */}
@@ -247,19 +264,22 @@ export const PlaatsenPage: React.FC = () => {
               style={{
                 position: 'fixed', bottom: 0, left: 0, right: 0,
                 background: 'var(--white)', borderRadius: '20px 20px 0 0',
-                zIndex: 91,
-                maxHeight: '92vh', display: 'flex', flexDirection: 'column',
+                zIndex: 91, maxHeight: '96dvh',
+                display: 'flex', flexDirection: 'column',
               }}
             >
-              {/* Sheet header */}
+              {/* Sheet header — drag handle closes */}
+              <button
+                onClick={resetForm}
+                style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 6px', flexShrink: 0, width: '100%' }}
+                aria-label="Sluiten"
+              >
+                <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--border-strong)' }} />
+              </button>
               <div style={{
-                padding: '12px var(--space-xl) var(--space-md)',
-                borderBottom: '1px solid var(--border)',
-                flexShrink: 0,
+                padding: '0 var(--space-xl) var(--space-md)',
+                borderBottom: '1px solid var(--border)', flexShrink: 0,
               }}>
-                <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
-                  <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--border-strong)' }} />
-                </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <h3 style={{ fontSize: 18, fontWeight: 700 }}>
                     {editId ? 'Plek bewerken' : 'Nieuwe plek'}
@@ -268,15 +288,12 @@ export const PlaatsenPage: React.FC = () => {
                     width: 32, height: 32, borderRadius: '50%', background: 'var(--cloud)',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: 18, color: 'var(--text-muted)',
-                  }}>×</button>
+                  }} aria-label="Sluiten">×</button>
                 </div>
               </div>
 
               {/* Scrollable form */}
-              <div style={{
-                flex: 1, overflowY: 'auto', WebkitOverflowScrolling: 'touch',
-                padding: 'var(--space-lg) var(--space-xl)',
-              }}>
+              <div className="sheet-scroll" style={{ padding: 'var(--space-lg) var(--space-xl)' }}>
                 {/* Object name */}
                 <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>
                   Wat? <span style={{ color: 'var(--danger)' }}>*</span>
@@ -304,29 +321,29 @@ export const PlaatsenPage: React.FC = () => {
                 <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>
                   Waar precies
                 </label>
-                <input type="text" placeholder="bijv. bij de voordeur, op het aanrecht" value={wherePrecisely}
-                  onChange={e => setWherePrecisely(e.target.value)} className="input-field"
-                  style={{ marginBottom: 12 }} />
+                <input type="text" placeholder="bijv. bij de voordeur, op het aanrecht"
+                  value={wherePrecisely} onChange={e => setWherePrecisely(e.target.value)}
+                  className="input-field" style={{ marginBottom: 12 }} />
 
                 {/* Sub-location */}
                 <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>
-                  Subplek <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(optioneel)</span>
+                  Subplek <span style={{ fontWeight: 400 }}>(optioneel)</span>
                 </label>
-                <input type="text" placeholder="bijv. bovenste la, rechter kast" value={subzone}
-                  onChange={e => setSubzone(e.target.value)} className="input-field"
-                  style={{ marginBottom: 12 }} />
+                <input type="text" placeholder="bijv. bovenste la, rechter kast"
+                  value={subzone} onChange={e => setSubzone(e.target.value)}
+                  className="input-field" style={{ marginBottom: 12 }} />
 
                 {/* Container */}
                 <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 6, display: 'block' }}>
-                  Container/lade/plank <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(optioneel)</span>
+                  Container/lade/plank <span style={{ fontWeight: 400 }}>(optioneel)</span>
                 </label>
-                <input type="text" placeholder="bijv. zwarte bak, rode map" value={container}
-                  onChange={e => setContainer(e.target.value)} className="input-field"
-                  style={{ marginBottom: 12 }} />
+                <input type="text" placeholder="bijv. zwarte bak, rode map"
+                  value={container} onChange={e => setContainer(e.target.value)}
+                  className="input-field" style={{ marginBottom: 12 }} />
 
                 {/* Position */}
                 <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>
-                  Positie <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(optioneel)</span>
+                  Positie <span style={{ fontWeight: 400 }}>(optioneel)</span>
                 </label>
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 }}>
                   {['Links', 'Rechts', 'Boven', 'Onder', 'Midden', 'Achteraan', 'Vooraan'].map(pos => (
@@ -349,7 +366,7 @@ export const PlaatsenPage: React.FC = () => {
 
                 {/* Photo */}
                 <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-muted)', marginBottom: 8, display: 'block' }}>
-                  Foto <span style={{ color: 'var(--text-muted)', fontWeight: 400 }}>(optioneel)</span>
+                  Foto <span style={{ fontWeight: 400 }}>(optioneel)</span>
                 </label>
 
                 {imagePreview ? (
@@ -364,22 +381,30 @@ export const PlaatsenPage: React.FC = () => {
                         position: 'absolute', top: 8, right: 8,
                         width: 28, height: 28, borderRadius: '50%',
                         background: 'rgba(0,0,0,0.5)', color: 'white',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 16,
-                      }}>×</button>
+                        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16,
+                      }}
+                      aria-label="Foto verwijderen"
+                    >×</button>
                     {uploading && (
                       <div style={{
                         position: 'absolute', bottom: 8, left: 8,
                         background: 'rgba(0,0,0,0.6)', color: 'white',
                         padding: '4px 10px', borderRadius: 20, fontSize: 11,
-                      }}>Uploaden...</div>
+                      }}>Uploaden naar cloud...</div>
                     )}
                     {uploadError && (
                       <div style={{
                         position: 'absolute', bottom: 8, left: 8, right: 8,
                         background: 'rgba(201,99,110,0.9)', color: 'white',
-                        padding: '4px 10px', borderRadius: 8, fontSize: 11,
+                        padding: '6px 10px', borderRadius: 8, fontSize: 11, lineHeight: 1.4,
                       }}>{uploadError}</div>
+                    )}
+                    {imageUrl && !uploading && !uploadError && (
+                      <div style={{
+                        position: 'absolute', bottom: 8, left: 8,
+                        background: 'rgba(107,170,125,0.9)', color: 'white',
+                        padding: '4px 10px', borderRadius: 20, fontSize: 11,
+                      }}>✓ In cloud opgeslagen</div>
                     )}
                   </div>
                 ) : (
@@ -391,7 +416,8 @@ export const PlaatsenPage: React.FC = () => {
                       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                       color: 'var(--text-secondary)',
                     }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                      stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
                       <rect x="3" y="3" width="18" height="18" rx="3"/>
                       <circle cx="8.5" cy="8.5" r="1.5"/>
                       <path d="M21 15l-5-5L5 21"/>
@@ -400,25 +426,35 @@ export const PlaatsenPage: React.FC = () => {
                   </button>
                 )}
 
-                <input ref={fileInputRef} type="file" accept="image/*" capture="environment"
+                <input ref={fileInputRef} type="file"
+                  accept="image/jpeg,image/png,image/webp,image/heic,image/gif"
+                  capture="environment"
                   onChange={handlePhotoSelect} style={{ display: 'none' }} />
 
                 <div style={{ height: 8 }} />
               </div>
 
-              {/* Sticky save button */}
-              <div style={{
-                padding: 'var(--space-md) var(--space-xl)',
-                paddingBottom: 'calc(var(--safe-bottom) + var(--space-md))',
-                borderTop: '1px solid var(--border)',
-                background: 'var(--white)',
-                flexShrink: 0,
-              }}>
-                <button onClick={handleSave}
-                  disabled={!objectLabel.trim() || uploading}
-                  className="btn-primary" style={{ width: '100%' }}>
-                  {uploading ? 'Foto wordt geüpload...' : editId ? 'Opslaan' : 'Toevoegen'}
+              {/* Sticky save — always above keyboard/nav */}
+              <div className="sticky-save-bar">
+                <button
+                  onClick={handleSave}
+                  disabled={!objectLabel.trim() || uploading || saveState === 'saving'}
+                  className="btn-primary"
+                  style={{ width: '100%' }}
+                  aria-label="Opslaan"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                    <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/>
+                  </svg>
+                  {saveLabel}
                 </button>
+                {!user && (
+                  <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginTop: 6 }}>
+                    Niet ingelogd — data wordt lokaal opgeslagen
+                  </p>
+                )}
               </div>
             </motion.div>
           </>
