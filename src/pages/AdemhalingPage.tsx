@@ -116,6 +116,10 @@ const BreathCircle: React.FC<{ phase: BreathPhase; progress: number; isAlternate
 
 export const AdemhalingPage: React.FC = () => {
   const { addBreathingSession, settings } = useStore()
+  // Use a ref so the interval callback always reads current settings without restarting
+  const settingsRef = useRef(settings)
+  settingsRef.current = settings
+
   const [stage, setStage] = useState<Stage>('overview')
   const [selectedExercise, setSelectedExercise] = useState<BreathingExercise | null>(null)
   const [selectedDuration, setSelectedDuration] = useState<number>(0)
@@ -136,17 +140,6 @@ export const AdemhalingPage: React.FC = () => {
     }
   }, [])
 
-  // Countdown handler
-  useEffect(() => {
-    if (stage !== 'countdown') return
-    if (countdown <= 0) {
-      startSession()
-      return
-    }
-    const t = setTimeout(() => setCountdown(c => c - 1), 1000)
-    return () => clearTimeout(t)
-  }, [stage, countdown])
-
   const startSession = useCallback(() => {
     if (!selectedExercise) return
     setStage('active')
@@ -156,6 +149,17 @@ export const AdemhalingPage: React.FC = () => {
     setCycleCount(0)
     setPaused(false)
   }, [selectedExercise, selectedDuration])
+
+  // Countdown handler
+  useEffect(() => {
+    if (stage !== 'countdown') return
+    if (countdown <= 0) {
+      startSession()
+      return
+    }
+    const t = setTimeout(() => setCountdown(c => c - 1), 1000)
+    return () => clearTimeout(t)
+  }, [stage, countdown, startSession])
 
   // Main session timer
   useEffect(() => {
@@ -186,8 +190,8 @@ export const AdemhalingPage: React.FC = () => {
             if (nextIndex === 0) setCycleCount(c => c + 1)
             setPhaseSecondsLeft(selectedExercise.phases[nextIndex].duration)
             // Haptic + optional chime on phase change
-            if (settings.breathingVibration) haptic('light')
-            if (settings.breathingChime) playBreathingPhaseChime()
+            if (settingsRef.current.breathingVibration) haptic('light')
+            if (settingsRef.current.breathingChime) playBreathingPhaseChime()
             return nextIndex
           })
           return 0 // Will be immediately overwritten above

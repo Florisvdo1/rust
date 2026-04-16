@@ -158,4 +158,6 @@ export interface UserSettings {
   darkMode: boolean
   breathingChime: boolean
   startTone: boolean
+  largerText?: boolean
+  reduceMotion?: boolean
 }

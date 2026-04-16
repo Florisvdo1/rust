@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '@/store'
 import { PageHeader } from '@/components/PageHeader'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { supabase } from '@/lib/supabase'
 
 const ROOMS = [
@@ -33,6 +34,7 @@ export const PlaatsenPage: React.FC = () => {
 
   const [search, setSearch] = useState('')
   const [filterRoom, setFilterRoom] = useState<string | null>(null)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -223,9 +225,9 @@ export const PlaatsenPage: React.FC = () => {
                       {p.position ? ` (${p.position})` : ''}
                     </p>
                     {p.notes && <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 4, lineHeight: 1.4 }}>{p.notes}</p>}
-                    <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-                      <button onClick={() => startEdit(p)} style={{ fontSize: 11, color: 'var(--soft-blue)', fontWeight: 600 }}>Bewerk</button>
-                      <button onClick={() => removePlace(p.id)} style={{ fontSize: 11, color: 'var(--danger)' }}>Verwijder</button>
+                    <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
+                      <button onClick={() => startEdit(p)} style={{ fontSize: 12, color: 'var(--soft-blue)', fontWeight: 600, minHeight: 36, padding: '0 8px' }}>Bewerk</button>
+                      <button onClick={() => setConfirmDeleteId(p.id)} style={{ fontSize: 12, color: 'var(--danger)', minHeight: 36, padding: '0 8px' }}>Verwijder</button>
                     </div>
                   </div>
                 </div>
@@ -460,6 +462,15 @@ export const PlaatsenPage: React.FC = () => {
           </>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        title="Plek verwijderen?"
+        message="Dit verwijdert de opgeslagen locatie en foto permanent."
+        confirmLabel="Verwijderen"
+        onConfirm={() => { if (confirmDeleteId) removePlace(confirmDeleteId); setConfirmDeleteId(null) }}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
     </div>
   )
 }

@@ -2,6 +2,9 @@ import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '@/store'
 import { PageHeader } from '@/components/PageHeader'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { Snackbar } from '@/components/Snackbar'
+import type { Note } from '@/types'
 
 const noteCategories = ['Algemeen', 'Persoonlijk', 'Werk', 'Gezondheid', 'Boodschappen', 'Ideeën', 'Afspraken', 'Financiën']
 const noteTemplates = [
@@ -26,6 +29,9 @@ export const OnthoudenPage: React.FC = () => {
   const [urgent, setUrgent] = useState(false)
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<Filter>('all')
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [undoNote, setUndoNote] = useState<Note | null>(null)
+  const [snackOpen, setSnackOpen] = useState(false)
 
   const filtered = useMemo(() => {
     let list = notes.filter(n => !n.archived)
@@ -58,6 +64,17 @@ export const OnthoudenPage: React.FC = () => {
       addNote({ title, content, category, pinned, urgent, done: false, archived: false })
     }
     resetForm()
+  }
+
+  const handleDeleteConfirmed = () => {
+    const note = notes.find(n => n.id === confirmDeleteId)
+    if (note) { setUndoNote(note); removeNote(note.id); setSnackOpen(true) }
+    setConfirmDeleteId(null)
+  }
+
+  const handleUndo = () => {
+    if (undoNote) addNote({ title: undoNote.title, content: undoNote.content, category: undoNote.category, pinned: undoNote.pinned, urgent: undoNote.urgent, done: undoNote.done, archived: undoNote.archived })
+    setUndoNote(null)
   }
 
   const startEdit = (note: typeof notes[0]) => {
@@ -137,15 +154,15 @@ export const OnthoudenPage: React.FC = () => {
                           {note.content.slice(0, 120)}{note.content.length > 120 ? '…' : ''}
                         </p>
                       )}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: 11, color: 'var(--text-muted)', background: 'var(--cloud)', padding: '2px 8px', borderRadius: 'var(--radius-full)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginTop: 4 }}>
+                        <span style={{ fontSize: 11, color: 'var(--text-muted)', background: 'var(--cloud)', padding: '4px 10px', borderRadius: 'var(--radius-full)', lineHeight: 1 }}>
                           {note.category}
                         </span>
-                        <button onClick={() => startEdit(note)} style={{ fontSize: 11, color: 'var(--soft-blue)', fontWeight: 600 }}>Bewerk</button>
-                        <button onClick={() => updateNote(note.id, { pinned: !note.pinned })} style={{ fontSize: 11, color: note.pinned ? 'var(--soft-blue)' : 'var(--text-muted)' }}>
+                        <button onClick={() => startEdit(note)} style={{ fontSize: 12, color: 'var(--soft-blue)', fontWeight: 600, minHeight: 36, padding: '0 8px' }}>Bewerk</button>
+                        <button onClick={() => updateNote(note.id, { pinned: !note.pinned })} style={{ fontSize: 12, color: note.pinned ? 'var(--soft-blue)' : 'var(--text-muted)', minHeight: 36, padding: '0 8px' }}>
                           {note.pinned ? 'Losmaken' : 'Vastpinnen'}
                         </button>
-                        <button onClick={() => removeNote(note.id)} style={{ fontSize: 11, color: 'var(--danger)' }}>Verwijder</button>
+                        <button onClick={() => setConfirmDeleteId(note.id)} style={{ fontSize: 12, color: 'var(--danger)', minHeight: 36, padding: '0 8px' }}>Verwijder</button>
                       </div>
                     </div>
                   </div>
@@ -167,6 +184,22 @@ export const OnthoudenPage: React.FC = () => {
             boxShadow: 'var(--shadow-lg)', zIndex: 50,
           }}>+</motion.button>
       )}
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        title="Notitie verwijderen?"
+        message="De notitie wordt verwijderd. Je kunt dit direct ongedaan maken."
+        confirmLabel="Verwijderen"
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
+      <Snackbar
+        open={snackOpen}
+        message="Notitie verwijderd"
+        actionLabel="Ongedaan"
+        onAction={handleUndo}
+        onClose={() => setSnackOpen(false)}
+      />
 
       {/* Add/Edit Sheet */}
       <AnimatePresence>

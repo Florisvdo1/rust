@@ -2,6 +2,7 @@ import React, { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '@/store'
 import { PageHeader } from '@/components/PageHeader'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 
 function todayStr() { return new Date().toISOString().split('T')[0] }
 
@@ -29,6 +30,7 @@ export const GezondheidPage: React.FC = () => {
   const [schWekelijks, setSchWekelijks] = useState<number[]>([])
   const [schNotitie, setSchNotitie] = useState('')
   const [schSuccess, setSchSuccess] = useState(false)
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   const handleScheduleSubmit = () => {
     if (!schNaam.trim()) return
@@ -194,7 +196,7 @@ export const GezondheidPage: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <button onClick={() => adjustSleep(-0.5)}
                   style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--cloud)', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)', flexShrink: 0 }}>−</button>
-                <span style={{ fontSize: 24, fontWeight: 700, minWidth: 44, textAlign: 'center' }}>{sleepHours}u</span>
+                <span style={{ fontSize: 24, fontWeight: 700, minWidth: 44, textAlign: 'center' }}>{sleepHours} u</span>
                 <button onClick={() => adjustSleep(0.5)}
                   style={{ width: 36, height: 36, borderRadius: '50%', background: 'var(--cloud)', fontSize: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid var(--border)', flexShrink: 0 }}>+</button>
               </div>
@@ -261,8 +263,9 @@ export const GezondheidPage: React.FC = () => {
                       {item.dosage}{item.schedule ? ` · ${item.schedule}` : ''}
                     </p>
                   </div>
-                  <button onClick={() => removeHealthItem(item.id)}
-                    style={{ width: 28, height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 18, flexShrink: 0 }}>×</button>
+                  <button onClick={() => setConfirmDeleteId(item.id)}
+                    style={{ width: 44, height: 44, display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: 20, flexShrink: 0 }}
+                    aria-label="Verwijder supplement">×</button>
                 </motion.div>
               )
             })}
@@ -432,6 +435,15 @@ export const GezondheidPage: React.FC = () => {
           </>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        open={confirmDeleteId !== null}
+        title="Supplement verwijderen?"
+        message="Dit verwijdert ook alle bijbehorende logboekgegevens."
+        confirmLabel="Verwijderen"
+        onConfirm={() => { if (confirmDeleteId) removeHealthItem(confirmDeleteId); setConfirmDeleteId(null) }}
+        onCancel={() => setConfirmDeleteId(null)}
+      />
 
       {/* Add sheet */}
       <AnimatePresence>

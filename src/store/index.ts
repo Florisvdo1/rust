@@ -192,6 +192,8 @@ export const useStore = create<AppState>()(
         darkMode: false,
         breathingChime: false,
         startTone: false,
+        largerText: false,
+        reduceMotion: false,
       },
       updateSettings: (updates) =>
         set((s) => ({ settings: { ...s.settings, ...updates } })),

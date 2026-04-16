@@ -92,14 +92,18 @@ export const DagboekPage: React.FC = () => {
                   </p>
                 </div>
               </div>
-              {todayEntry.wentWell && (
-                <div style={{ background: 'rgba(255,255,255,0.7)', borderRadius: 10, padding: '10px 12px', marginBottom: 10 }}>
-                  <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 3 }}>Wat ging goed</p>
+              {[
+                { key: 'wentWell', label: 'Wat ging goed', value: todayEntry.wentWell },
+                { key: 'wasDifficult', label: 'Wat was moeilijk', value: todayEntry.wasDifficult },
+                { key: 'rememberTomorrow', label: 'Wat wil ik onthouden', value: todayEntry.rememberTomorrow },
+              ].filter(f => f.value).map(f => (
+                <div key={f.key} style={{ background: 'rgba(255,255,255,0.7)', borderRadius: 10, padding: '10px 12px', marginBottom: 8 }}>
+                  <p style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 600, marginBottom: 3 }}>{f.label}</p>
                   <p style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-                    {todayEntry.wentWell.slice(0, 100)}{todayEntry.wentWell.length > 100 ? '...' : ''}
+                    {f.value.slice(0, 80)}{f.value.length > 80 ? '...' : ''}
                   </p>
                 </div>
-              )}
+              ))}
             </>
           ) : (
             <p style={{ fontSize: 15, color: 'var(--text-secondary)', lineHeight: 1.5, marginBottom: 10 }}>
@@ -135,9 +139,10 @@ export const DagboekPage: React.FC = () => {
                       </p>
                     </div>
                   </div>
-                  {entry.wentWell && (
+                  {(entry.wentWell || entry.wasDifficult) && (
                     <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, marginTop: 4 }}>
-                      {entry.wentWell.slice(0, 80)}{entry.wentWell.length > 80 ? '...' : ''}
+                      {(entry.wentWell || entry.wasDifficult).slice(0, 80)}
+                      {(entry.wentWell || entry.wasDifficult).length > 80 ? '...' : ''}
                     </p>
                   )}
                 </motion.div>
