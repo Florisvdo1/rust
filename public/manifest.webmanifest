@@ -1,0 +1,28 @@
+{
+  "name": "RUST",
+  "short_name": "RUST",
+  "description": "Jouw rust, structuur en balans — dagelijkse assistent voor neurodivergente gebruikers.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1e293b",
+  "theme_color": "#1e293b",
+  "orientation": "portrait-primary",
+  "lang": "nl",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [],
+  "categories": ["health", "lifestyle", "productivity"]
+}

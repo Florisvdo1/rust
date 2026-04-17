@@ -3,6 +3,19 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { supabase } from '@/lib/supabase'
 import { useStore } from '@/store'
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const MIN_PW = 8
+
+function authErrorMessage(message: string, mode: 'login' | 'register'): string {
+  const m = message.toLowerCase()
+  if (m.includes('invalid login') || m.includes('invalid credentials')) return 'E-mailadres of wachtwoord klopt niet.'
+  if (m.includes('email not confirmed')) return 'Bevestig eerst je e-mailadres via de link in je inbox.'
+  if (m.includes('too many') || m.includes('rate limit')) return 'Te veel pogingen. Probeer het later opnieuw.'
+  if (mode === 'register' && (m.includes('already registered') || m.includes('already exists') || m.includes('unique'))) return 'Er bestaat al een account met dit e-mailadres.'
+  if (mode === 'register' && m.includes('password')) return `Wachtwoord voldoet niet. Kies minimaal ${MIN_PW} tekens.`
+  return mode === 'login' ? 'Inloggen mislukt. Probeer het opnieuw.' : 'Registratie mislukt: ' + message
+}
+
 type Mode = 'welcome' | 'login' | 'register'
 
 interface AuthPageProps {
@@ -31,15 +44,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onComplete, onGuest }) => {
   }
 
   const handleLogin = async () => {
-    if (!email.trim() || !password) {
-      setError('Vul je e-mailadres en wachtwoord in.')
-      return
-    }
+    if (!email.trim()) { setError('Vul je e-mailadres in.'); return }
+    if (!EMAIL_RE.test(email.trim())) { setError('Ongeldig e-mailadres.'); return }
+    if (!password) { setError('Vul je wachtwoord in.'); return }
     setLoading(true)
     setError(null)
 
     if (!supabase) {
-      // Local fallback when Supabase not configured
       setUser({ id: 'local-' + Date.now(), email: email.trim(), username: email.split('@')[0] })
       onComplete()
       setLoading(false)
@@ -47,36 +58,32 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onComplete, onGuest }) => {
     }
 
     const { data, error: authError } = await supabase.auth.signInWithPassword({
-      email: email.trim(),
+      email: email.trim().toLowerCase(),
       password,
     })
 
     if (authError) {
-      setError('Inloggen mislukt. Controleer je gegevens.')
-    } else if (data.user) {
+      setError(authErrorMessage(authError.message, 'login'))
+    } else if (data.session) {
       setUser({
-        id: data.user.id,
-        email: data.user.email ?? email,
-        username: (data.user.user_metadata?.username as string) ?? email.split('@')[0],
+        id: data.session.user.id,
+        email: data.session.user.email ?? email,
+        username: (data.session.user.user_metadata?.username as string) ?? email.split('@')[0],
       })
       onComplete()
+    } else {
+      setError('Geen sessie ontvangen. Bevestig je e-mailadres en probeer opnieuw.')
     }
     setLoading(false)
   }
 
   const handleRegister = async () => {
-    if (!email.trim() || !username.trim() || !password) {
-      setError('Vul alle verplichte velden in.')
-      return
-    }
-    if (password !== passwordConfirm) {
-      setError('Wachtwoorden komen niet overeen.')
-      return
-    }
-    if (password.length < 6) {
-      setError('Wachtwoord moet minimaal 6 tekens zijn.')
-      return
-    }
+    if (!email.trim()) { setError('Vul je e-mailadres in.'); return }
+    if (!EMAIL_RE.test(email.trim())) { setError('Ongeldig e-mailadres.'); return }
+    if (!username.trim()) { setError('Vul een gebruikersnaam in.'); return }
+    if (!password) { setError('Kies een wachtwoord.'); return }
+    if (password.length < MIN_PW) { setError(`Wachtwoord moet minimaal ${MIN_PW} tekens bevatten.`); return }
+    if (password !== passwordConfirm) { setError('Wachtwoorden komen niet overeen.'); return }
     setLoading(true)
     setError(null)
 
@@ -88,29 +95,23 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onComplete, onGuest }) => {
     }
 
     const { data, error: authError } = await supabase.auth.signUp({
-      email: email.trim(),
+      email: email.trim().toLowerCase(),
       password,
-      options: {
-        data: { username: username.trim() },
-        emailRedirectTo: undefined,
-      },
+      options: { data: { username: username.trim() } },
     })
 
     if (authError) {
-      setError('Registratie mislukt: ' + authError.message)
+      setError(authErrorMessage(authError.message, 'register'))
+    } else if (data.session) {
+      setUser({
+        id: data.session.user.id,
+        email: data.session.user.email ?? email,
+        username: username.trim(),
+      })
+      onComplete()
     } else if (data.user) {
-      // Check if email confirmation required
-      if (data.session) {
-        setUser({
-          id: data.user.id,
-          email: data.user.email ?? email,
-          username: username.trim(),
-        })
-        onComplete()
-      } else {
-        setSuccess('Account aangemaakt! Je kunt nu inloggen.')
-        setMode('login')
-      }
+      setSuccess('Account aangemaakt! Controleer je e-mail voor een bevestigingslink, dan kun je inloggen.')
+      setMode('login')
     }
     setLoading(false)
   }
@@ -306,7 +307,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onComplete, onGuest }) => {
                 <div style={{ position: 'relative' }}>
                   <input
                     type={showPassword ? 'text' : 'password'}
-                    placeholder="Minimaal 6 tekens"
+                    placeholder="Minimaal 8 tekens"
                     value={password}
                     onChange={e => setPassword(e.target.value)}
                     autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
@@ -344,7 +345,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onComplete, onGuest }) => {
                 </div>
                 {mode === 'register' && (
                   <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)', marginTop: 6, lineHeight: 1.5 }}>
-                    Schrijf je wachtwoord ergens veilig op. Wachtwoord wijzigen is in deze versie nog niet beschikbaar.
+                    Minimaal {MIN_PW} tekens. Je kunt je wachtwoord later wijzigen via Meer → Profiel.
                   </p>
                 )}
               </div>

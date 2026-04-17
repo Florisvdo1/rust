@@ -147,7 +147,18 @@ body.nav-collapsed .page-scroll {
   background: var(--white);
 }
 
-/* Keyboard-safe: when virtual keyboard is open, reduce sheet height */
+/* Sheet max-height: dvh shrinks when virtual keyboard is open */
+.sheet-container {
+  max-height: 94vh;
+}
+
+@supports (height: 1dvh) {
+  .sheet-container {
+    max-height: 94dvh;
+  }
+}
+
+/* Legacy alias */
 @supports (height: 100dvh) {
   .sheet-keyboard-safe {
     max-height: 96dvh;

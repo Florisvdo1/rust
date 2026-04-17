@@ -310,7 +310,7 @@ export const GezondheidPage: React.FC = () => {
               style={{
                 position: 'fixed', bottom: 0, left: 0, right: 0,
                 background: 'var(--white)', borderRadius: '20px 20px 0 0', zIndex: 91,
-                display: 'flex', flexDirection: 'column', maxHeight: '90vh',
+                display: 'flex', flexDirection: 'column', maxHeight: '90dvh',
               }}
             >
               <button onClick={() => setShowSchedule(false)}

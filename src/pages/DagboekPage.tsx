@@ -166,7 +166,7 @@ export const DagboekPage: React.FC = () => {
               style={{
                 position: 'fixed', bottom: 0, left: 0, right: 0,
                 background: 'var(--white)', borderRadius: '20px 20px 0 0',
-                zIndex: 91, maxHeight: '94vh', display: 'flex', flexDirection: 'column',
+                zIndex: 91, maxHeight: '94dvh', display: 'flex', flexDirection: 'column',
               }}
             >
               <div style={{ padding: '12px var(--space-xl) var(--space-md)', borderBottom: '1px solid var(--border)', flexShrink: 0 }}>

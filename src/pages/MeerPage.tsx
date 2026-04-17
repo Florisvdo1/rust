@@ -246,7 +246,7 @@ export const MeerPage: React.FC = () => {
               style={{
                 position: 'fixed', bottom: 0, left: 0, right: 0,
                 background: 'var(--white)', borderRadius: '20px 20px 0 0',
-                zIndex: 91, display: 'flex', flexDirection: 'column', maxHeight: '90vh',
+                zIndex: 91, display: 'flex', flexDirection: 'column', maxHeight: '90dvh',
               }}
             >
 
