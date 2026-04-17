@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { PlannerItem, Note, Place, JournalEntry, HealthItem, HealthLog, DailyHealth, BreathingSession, UserSettings, AuthUser } from '@/types'
+import type { CloudData } from '@/lib/sync'
 
 function uid(): string {
   return Date.now().toString(36) + Math.random().toString(36).slice(2, 9)
@@ -15,6 +16,7 @@ interface AppState {
   setGuest: (guest: boolean) => void
   setGuestDataMigrationDone: () => void
   clearUserData: () => void
+  setCloudData: (data: Partial<CloudData>) => void
 
   // Planner
   plannerItems: PlannerItem[]
@@ -67,6 +69,24 @@ export const useStore = create<AppState>()(
       setUser: (user) => set({ user, isGuest: false }),
       setGuest: (guest) => set({ isGuest: guest }),
       setGuestDataMigrationDone: () => set({ guestDataMigrationDone: true }),
+      setCloudData: (data) => set((s) => {
+        const merge = <T extends { id: string }>(local: T[], cloud?: T[]) => {
+          if (!cloud?.length) return local
+          const map = new Map(local.map(i => [i.id, i]))
+          cloud.forEach(i => map.set(i.id, i))
+          return Array.from(map.values())
+        }
+        return {
+          notes: merge(s.notes, data.notes),
+          places: merge(s.places, data.places),
+          plannerItems: merge(s.plannerItems, data.plannerItems),
+          journalEntries: merge(s.journalEntries, data.journalEntries),
+          healthItems: merge(s.healthItems, data.healthItems),
+          healthLogs: merge(s.healthLogs, data.healthLogs),
+          dailyHealth: merge(s.dailyHealth, data.dailyHealth),
+          breathingSessions: merge(s.breathingSessions, data.breathingSessions),
+        }
+      }),
       clearUserData: () => set({
         notes: [],
         places: [],

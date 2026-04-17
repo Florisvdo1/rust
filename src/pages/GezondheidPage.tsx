@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '@/store'
 import { PageHeader } from '@/components/PageHeader'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { SyncBadge } from '@/components/SyncBadge'
+import { supabase } from '@/lib/supabase'
+import { syncHealthItem, deleteCloudHealthItem, syncHealthLog, syncDailyHealth as pushDailyHealth, syncPlannerItem } from '@/lib/sync'
 
 function todayStr() { return new Date().toISOString().split('T')[0] }
 
@@ -11,7 +14,7 @@ const WEEKDAYS_NL = ['Ma', 'Di', 'Wo', 'Do', 'Vr', 'Za', 'Zo']
 function jsWeekdayToIndex(d: Date) { return (d.getDay() + 6) % 7 }
 
 export const GezondheidPage: React.FC = () => {
-  const { healthItems, healthLogs, dailyHealth, addHealthItem, removeHealthItem, toggleHealthLog, updateDailyHealth, addPlannerItem } = useStore()
+  const { healthItems, healthLogs, dailyHealth, addHealthItem, removeHealthItem, toggleHealthLog, updateDailyHealth, addPlannerItem, user } = useStore()
   const [showAdd, setShowAdd] = useState(false)
   const [name, setName] = useState('')
   const [type, setType] = useState<'supplement' | 'medication'>('supplement')
@@ -74,6 +77,10 @@ export const GezondheidPage: React.FC = () => {
       }
     }
     dates.forEach(date => addPlannerItem({ ...baseItem, date }))
+    if (dates.length > 0 && user?.id && supabase) {
+      const allItems = useStore.getState().plannerItems
+      allItems.slice(-dates.length).forEach(item => void syncPlannerItem(user.id!, item))
+    }
     setSchNaam(''); setSchDosering(''); setSchHoeveelheid(1); setSchTijd('08:00')
     setSchHerhaling('dagelijks'); setSchWekelijks([]); setSchNotitie(''); setSchSuccess(true)
     setTimeout(() => { setSchSuccess(false); setShowSchedule(false) }, 1800)
@@ -88,6 +95,11 @@ export const GezondheidPage: React.FC = () => {
   const handleAddItem = () => {
     if (!name.trim()) return
     addHealthItem({ name, type, dosage, schedule })
+    if (user?.id && supabase) {
+      const items = useStore.getState().healthItems
+      const newItem = items[items.length - 1]
+      if (newItem) void syncHealthItem(user.id, newItem)
+    }
     setName(''); setDosage(''); setSchedule(''); setShowAdd(false)
   }
 
@@ -95,17 +107,38 @@ export const GezondheidPage: React.FC = () => {
     return healthLogs.some(l => l.itemId === itemId && l.date === today && l.taken)
   }
 
+  const syncDH = () => {
+    if (!user?.id || !supabase) return
+    const dh = useStore.getState().dailyHealth.find(d => d.date === today)
+    if (dh) void pushDailyHealth(user.id, dh)
+  }
+
+  const handleToggleHealthLog = (itemId: string) => {
+    toggleHealthLog(itemId, today)
+    if (user?.id && supabase) {
+      const log = useStore.getState().healthLogs.find(l => l.itemId === itemId && l.date === today)
+      if (log) void syncHealthLog(user.id, log)
+    }
+  }
+
+  const handleUpdateDailyHealth = (data: Parameters<typeof updateDailyHealth>[1]) => {
+    updateDailyHealth(today, data)
+    syncDH()
+  }
+
   const adjustHydration = (delta: number) => {
     updateDailyHealth(today, { hydration: Math.max(0, Math.min(12, hydration + delta)) })
+    syncDH()
   }
 
   const adjustSleep = (delta: number) => {
     updateDailyHealth(today, { sleepHours: Math.max(0, Math.min(14, Math.round((sleepHours + delta) * 2) / 2)) })
+    syncDH()
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <PageHeader title="Gezondheid" subtitle="Supplementen, hydratatie & slaap" />
+      <PageHeader title="Gezondheid" subtitle="Supplementen, hydratatie & slaap" right={<SyncBadge synced={!!user && !!supabase} />} />
       <div className="page-scroll" style={{ padding: '0 var(--space-lg)' }}>
 
         {/* Today summary card */}
@@ -170,7 +203,7 @@ export const GezondheidPage: React.FC = () => {
           </div>
           <div style={{ display: 'flex', gap: 4 }}>
             {Array.from({ length: 8 }, (_, i) => i + 1).map(g => (
-              <button key={g} onClick={() => updateDailyHealth(today, { hydration: hydration === g ? g - 1 : g })}
+              <button key={g} onClick={() => handleUpdateDailyHealth({ hydration: hydration === g ? g - 1 : g })}
                 style={{
                   flex: 1, height: 28, borderRadius: 'var(--radius-sm)',
                   background: g <= hydration ? 'var(--soft-blue)' : 'rgba(255,255,255,0.6)',
@@ -205,7 +238,7 @@ export const GezondheidPage: React.FC = () => {
               <p style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 8 }}>Kwaliteit</p>
               <div style={{ display: 'flex', gap: 4 }}>
                 {[1, 2, 3, 4, 5].map(v => (
-                  <button key={v} onClick={() => updateDailyHealth(today, { sleepQuality: v })}
+                  <button key={v} onClick={() => handleUpdateDailyHealth({ sleepQuality: v })}
                     style={{
                       flex: 1, height: 36, borderRadius: 8,
                       background: v <= sleepQuality ? 'var(--granite-blue)' : 'var(--cloud)',
@@ -241,7 +274,7 @@ export const GezondheidPage: React.FC = () => {
                   display: 'flex', alignItems: 'center', gap: 12,
                   opacity: taken ? 0.65 : 1, transition: 'opacity 0.2s',
                 }}>
-                  <button onClick={() => toggleHealthLog(item.id, today)} style={{
+                  <button onClick={() => handleToggleHealthLog(item.id)} style={{
                     width: 30, height: 30, borderRadius: 9,
                     border: `2px solid ${taken ? 'var(--success)' : 'var(--border-strong)'}`,
                     background: taken ? 'var(--success)' : 'transparent',
@@ -291,7 +324,7 @@ export const GezondheidPage: React.FC = () => {
           <textarea
             placeholder="Hoe voel je je vandaag? Bijzonderheden?"
             value={todayHealth?.notes || ''}
-            onChange={e => updateDailyHealth(today, { notes: e.target.value })}
+            onChange={e => handleUpdateDailyHealth({ notes: e.target.value })}
             className="input-field"
             style={{ minHeight: 80, resize: 'none' }}
           />
@@ -441,7 +474,13 @@ export const GezondheidPage: React.FC = () => {
         title="Supplement verwijderen?"
         message="Dit verwijdert ook alle bijbehorende logboekgegevens."
         confirmLabel="Verwijderen"
-        onConfirm={() => { if (confirmDeleteId) removeHealthItem(confirmDeleteId); setConfirmDeleteId(null) }}
+        onConfirm={() => {
+          if (confirmDeleteId) {
+            if (user?.id && supabase) void deleteCloudHealthItem(confirmDeleteId)
+            removeHealthItem(confirmDeleteId)
+          }
+          setConfirmDeleteId(null)
+        }}
         onCancel={() => setConfirmDeleteId(null)}
       />
 

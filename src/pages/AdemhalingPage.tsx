@@ -2,8 +2,11 @@ import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '@/store'
 import { PageHeader } from '@/components/PageHeader'
+import { SyncBadge } from '@/components/SyncBadge'
 import { breathingExercises, durationChoices } from '@/lib/breathing'
 import { haptic, playBreathingPhaseChime, playBreathingStartChime } from '@/lib/haptics'
+import { supabase } from '@/lib/supabase'
+import { syncBreathingSession } from '@/lib/sync'
 import type { BreathingExercise, BreathPhase } from '@/types'
 
 type Stage = 'overview' | 'detail' | 'duration' | 'countdown' | 'active' | 'complete'
@@ -115,10 +118,11 @@ const BreathCircle: React.FC<{ phase: BreathPhase; progress: number; isAlternate
 }
 
 export const AdemhalingPage: React.FC = () => {
-  const { addBreathingSession, settings } = useStore()
-  // Use a ref so the interval callback always reads current settings without restarting
+  const { addBreathingSession, settings, user } = useStore()
   const settingsRef = useRef(settings)
   settingsRef.current = settings
+  const userRef = useRef(user)
+  userRef.current = user
 
   const [stage, setStage] = useState<Stage>('overview')
   const [selectedExercise, setSelectedExercise] = useState<BreathingExercise | null>(null)
@@ -177,6 +181,11 @@ export const AdemhalingPage: React.FC = () => {
             completedAt: new Date().toISOString(),
             completed: true,
           })
+          if (userRef.current?.id && supabase) {
+            const sessions = useStore.getState().breathingSessions
+            const newSession = sessions[sessions.length - 1]
+            if (newSession) void syncBreathingSession(userRef.current.id, newSession)
+          }
           return 0
         }
         return prev - 1
@@ -240,7 +249,7 @@ export const AdemhalingPage: React.FC = () => {
   if (stage === 'overview') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <PageHeader title="Ademhaling" subtitle="Rust vinden in je adem" />
+        <PageHeader title="Ademhaling" subtitle="Rust vinden in je adem" right={<SyncBadge synced={!!user && !!supabase} />} />
         <div className="page-scroll" style={{ padding: '0 var(--space-lg)' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {breathingExercises.map((ex, i) => (

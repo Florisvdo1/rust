@@ -1,4 +1,5 @@
 import React from 'react'
+import { createPortal } from 'react-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface ConfirmDialogProps {
@@ -21,7 +22,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   danger = true,
   onConfirm,
   onCancel,
-}) => (
+}) => createPortal(
   <AnimatePresence>
     {open && (
       <>
@@ -67,7 +68,7 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             <button
               onClick={onConfirm}
               className={danger ? 'btn-danger' : 'btn-primary'}
-              style={{ flex: 1 }}
+              style={{ flex: 1, minHeight: 44 }}
             >
               {confirmLabel}
             </button>
@@ -75,5 +76,6 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
         </motion.div>
       </>
     )}
-  </AnimatePresence>
+  </AnimatePresence>,
+  document.body
 )

@@ -3,7 +3,9 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '@/store'
 import { PageHeader } from '@/components/PageHeader'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { SyncBadge } from '@/components/SyncBadge'
 import { supabase } from '@/lib/supabase'
+import { syncPlace, deleteCloudPlace } from '@/lib/sync'
 
 const ROOMS = [
   'Woonkamer', 'Slaapkamer', 'Keuken', 'Badkamer', 'Kantoor', 'Gang',
@@ -111,8 +113,17 @@ export const PlaatsenPage: React.FC = () => {
     try {
       if (editId) {
         updatePlace(editId, { room, objectLabel, wherePrecisely, subzone, container, position, notes, imageUrl: finalImageUrl })
+        if (user?.id && supabase) {
+          const updated = useStore.getState().places.find(p => p.id === editId)
+          if (updated) void syncPlace(user.id, updated)
+        }
       } else {
         addPlace({ room, objectLabel, wherePrecisely, subzone, container, position, notes, imageUrl: finalImageUrl })
+        if (user?.id && supabase) {
+          const allPlaces = useStore.getState().places
+          const newPlace = allPlaces[allPlaces.length - 1]
+          if (newPlace) void syncPlace(user.id, newPlace)
+        }
       }
       setSaveState('saved')
       setTimeout(resetForm, 600)
@@ -144,7 +155,7 @@ export const PlaatsenPage: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <PageHeader title="Plaatsen" subtitle="Waar heb ik het gelaten?" />
+      <PageHeader title="Plaatsen" subtitle="Waar heb ik het gelaten?" right={<SyncBadge synced={!!user && !!supabase} />} />
 
       <div style={{ padding: '0 var(--space-lg)', marginBottom: 10, flexShrink: 0 }}>
         <input type="text" placeholder="Zoek voorwerp of plek..."
@@ -468,7 +479,13 @@ export const PlaatsenPage: React.FC = () => {
         title="Plek verwijderen?"
         message="Dit verwijdert de opgeslagen locatie en foto permanent."
         confirmLabel="Verwijderen"
-        onConfirm={() => { if (confirmDeleteId) removePlace(confirmDeleteId); setConfirmDeleteId(null) }}
+        onConfirm={() => {
+          if (confirmDeleteId) {
+            if (user?.id && supabase) void deleteCloudPlace(confirmDeleteId)
+            removePlace(confirmDeleteId)
+          }
+          setConfirmDeleteId(null)
+        }}
         onCancel={() => setConfirmDeleteId(null)}
       />
     </div>

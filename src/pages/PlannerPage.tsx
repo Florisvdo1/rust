@@ -2,7 +2,10 @@ import React, { useState, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '@/store'
 import { PageHeader } from '@/components/PageHeader'
+import { SyncBadge } from '@/components/SyncBadge'
 import { haptic } from '@/lib/haptics'
+import { supabase } from '@/lib/supabase'
+import { syncPlannerItem, deleteCloudPlannerItem } from '@/lib/sync'
 import type { PlannerItem } from '@/types'
 
 // ─── Activities ────────────────────────────────────────────────────────────────
@@ -284,7 +287,7 @@ function dayLabel(offset: number) {
 
 // ─── Component ─────────────────────────────────────────────────────────────────
 export const PlannerPage: React.FC = () => {
-  const { plannerItems, addPlannerItem, removePlannerItem, updatePlannerItem } = useStore()
+  const { plannerItems, addPlannerItem, removePlannerItem, updatePlannerItem, user } = useStore()
   const [selectedDay, setSelectedDay] = useState(0)
   const [trayOpen, setTrayOpen] = useState(false)
   const [traySearch, setTraySearch] = useState('')
@@ -327,10 +330,15 @@ export const PlannerPage: React.FC = () => {
       color: selectedActivity.color,
       iconId: selectedActivity.icon,
     })
+    if (user?.id && supabase) {
+      const items = useStore.getState().plannerItems
+      const newItem = items[items.length - 1]
+      if (newItem) void syncPlannerItem(user.id, newItem)
+    }
     setPlacingMode(false)
     setSelectedActivity(null)
     setTrayOpen(false)
-  }, [selectedActivity, placingMode, currentDate, selectedDuration, addPlannerItem])
+  }, [selectedActivity, placingMode, currentDate, selectedDuration, addPlannerItem, user])
 
   const startPlacing = (activity: typeof ACTIVITIES[0]) => {
     haptic('light')
@@ -349,6 +357,7 @@ export const PlannerPage: React.FC = () => {
       <PageHeader
         title="Planner"
         subtitle={new Date().toLocaleDateString('nl-NL', { month: 'long', year: 'numeric' })}
+        right={<SyncBadge synced={!!user && !!supabase} />}
       />
 
       {/* Day tabs */}
@@ -491,7 +500,7 @@ export const PlannerPage: React.FC = () => {
                     </button>
                     <button
                       onPointerDown={e => { e.stopPropagation(); haptic('light') }}
-                      onClick={e => { e.stopPropagation(); removePlannerItem(item.id) }}
+                      onClick={e => { e.stopPropagation(); if (user?.id && supabase) void deleteCloudPlannerItem(item.id); removePlannerItem(item.id) }}
                       style={{
                         flexShrink: 0, width: 18, height: 18,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -505,9 +514,23 @@ export const PlannerPage: React.FC = () => {
                       <input
                         value={noteText}
                         onChange={e => setNoteText(e.target.value)}
-                        onBlur={() => { updatePlannerItem(item.id, { notes: noteText }); setEditingNoteId(null) }}
+                        onBlur={() => {
+                          updatePlannerItem(item.id, { notes: noteText })
+                          if (user?.id && supabase) {
+                            const updated = useStore.getState().plannerItems.find(p => p.id === item.id)
+                            if (updated) void syncPlannerItem(user.id, updated)
+                          }
+                          setEditingNoteId(null)
+                        }}
                         onKeyDown={e => {
-                          if (e.key === 'Enter') { updatePlannerItem(item.id, { notes: noteText }); setEditingNoteId(null) }
+                          if (e.key === 'Enter') {
+                            updatePlannerItem(item.id, { notes: noteText })
+                            if (user?.id && supabase) {
+                              const updated = useStore.getState().plannerItems.find(p => p.id === item.id)
+                              if (updated) void syncPlannerItem(user.id, updated)
+                            }
+                            setEditingNoteId(null)
+                          }
                           if (e.key === 'Escape') setEditingNoteId(null)
                         }}
                         onClick={e => e.stopPropagation()}

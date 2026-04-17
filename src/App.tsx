@@ -13,13 +13,17 @@ import { MeerPage } from '@/pages/MeerPage'
 import { AuthPage } from '@/pages/AuthPage'
 import { useStore } from '@/store'
 import { supabase } from '@/lib/supabase'
+import { loadCloudData, migrateGuestDataToCloud } from '@/lib/sync'
 
 export const App: React.FC = () => {
-  const { user, isGuest, setUser, guestDataMigrationDone, setGuestDataMigrationDone, clearUserData, notes, places, plannerItems } = useStore()
+  const {
+    user, isGuest, setUser, guestDataMigrationDone, setGuestDataMigrationDone,
+    clearUserData, setCloudData,
+    notes, places, plannerItems, journalEntries, healthItems, healthLogs, dailyHealth, breathingSessions,
+  } = useStore()
   const [authChecked, setAuthChecked] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
   const [showMigration, setShowMigration] = useState(false)
-  // Track whether the current auth flow came from a guest session
   const hadGuestDataRef = useRef(false)
 
   useEffect(() => {
@@ -33,7 +37,6 @@ export const App: React.FC = () => {
             username: (data.session.user.user_metadata?.username as string) ?? data.session.user.email?.split('@')[0],
           })
         } else {
-          // No valid Supabase session — clear any stale persisted user to prevent bypass
           setUser(null)
         }
         supabase.auth.onAuthStateChange((_event, session) => {
@@ -55,7 +58,6 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     if (authChecked && !user && !isGuest) {
-      // Capture whether there is existing local data before auth screen opens
       hadGuestDataRef.current = notes.length > 0 || places.length > 0 || plannerItems.length > 0
       setShowAuth(true)
     } else {
@@ -63,13 +65,39 @@ export const App: React.FC = () => {
     }
   }, [authChecked, user, isGuest]) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Load cloud data once auth is confirmed and no migration is pending
+  useEffect(() => {
+    if (authChecked && user && !showMigration) {
+      loadCloudData(user.id).then(data => {
+        if (data) setCloudData(data)
+      }).catch(() => {})
+    }
+  }, [user?.id, showMigration, authChecked]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleAuthComplete = () => {
-    // After a successful login/register, if there was guest data and migration
-    // has never been prompted, show the one-time migration dialog
     if (hadGuestDataRef.current && !guestDataMigrationDone) {
       setShowMigration(true)
     }
     setShowAuth(false)
+  }
+
+  const handleMigrationKeep = async () => {
+    // Push all local guest data to cloud, then mark done
+    const currentUser = useStore.getState().user
+    if (currentUser) {
+      await migrateGuestDataToCloud(currentUser.id, {
+        notes, places, plannerItems, journalEntries, healthItems, healthLogs, dailyHealth, breathingSessions,
+      })
+    }
+    setGuestDataMigrationDone()
+    setShowMigration(false)
+  }
+
+  const handleMigrationDelete = () => {
+    clearUserData()
+    setGuestDataMigrationDone()
+    setShowMigration(false)
+    // Cloud load effect fires automatically when showMigration → false
   }
 
   if (!authChecked) {
@@ -118,16 +146,15 @@ export const App: React.FC = () => {
         <BottomNav />
       </div>
 
-      {/* One-time guest data migration prompt */}
       <ConfirmDialog
         open={showMigration}
         title="Gast-gegevens gevonden"
-        message="Je hebt eerder notities, plaatsen of andere gegevens als gast aangemaakt. Wil je deze bewaren?"
+        message="Je hebt eerder notities, plaatsen of andere gegevens als gast aangemaakt. Wil je deze bewaren en synchroniseren met je account?"
         confirmLabel="Bewaren"
         cancelLabel="Verwijderen"
         danger={false}
-        onConfirm={() => { setGuestDataMigrationDone(); setShowMigration(false) }}
-        onCancel={() => { clearUserData(); setGuestDataMigrationDone(); setShowMigration(false) }}
+        onConfirm={handleMigrationKeep}
+        onCancel={handleMigrationDelete}
       />
     </BrowserRouter>
   )

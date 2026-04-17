@@ -156,3 +156,40 @@ ALTER TABLE planner_items ADD COLUMN IF NOT EXISTS health_type TEXT;
 ALTER TABLE planner_items ADD COLUMN IF NOT EXISTS health_dosage TEXT;
 ALTER TABLE planner_items ADD COLUMN IF NOT EXISTS health_quantity INTEGER;
 ALTER TABLE planner_items ADD COLUMN IF NOT EXISTS health_note TEXT;
+
+-- Row Level Security (v1.3.0)
+-- Enable RLS on all tables
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE places ENABLE ROW LEVEL SECURITY;
+ALTER TABLE planner_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE journal_entries ENABLE ROW LEVEL SECURITY;
+ALTER TABLE health_items ENABLE ROW LEVEL SECURITY;
+ALTER TABLE health_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE daily_health ENABLE ROW LEVEL SECURITY;
+ALTER TABLE breathing_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_settings ENABLE ROW LEVEL SECURITY;
+
+-- Drop existing policies first (idempotent)
+DROP POLICY IF EXISTS "own_profile" ON profiles;
+DROP POLICY IF EXISTS "own_notes" ON notes;
+DROP POLICY IF EXISTS "own_places" ON places;
+DROP POLICY IF EXISTS "own_planner_items" ON planner_items;
+DROP POLICY IF EXISTS "own_journal_entries" ON journal_entries;
+DROP POLICY IF EXISTS "own_health_items" ON health_items;
+DROP POLICY IF EXISTS "own_health_logs" ON health_logs;
+DROP POLICY IF EXISTS "own_daily_health" ON daily_health;
+DROP POLICY IF EXISTS "own_breathing_sessions" ON breathing_sessions;
+DROP POLICY IF EXISTS "own_user_settings" ON user_settings;
+
+-- Users can only read and write their own records
+CREATE POLICY "own_profile" ON profiles FOR ALL USING (auth.uid() = id);
+CREATE POLICY "own_notes" ON notes FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "own_places" ON places FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "own_planner_items" ON planner_items FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "own_journal_entries" ON journal_entries FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "own_health_items" ON health_items FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "own_health_logs" ON health_logs FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "own_daily_health" ON daily_health FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "own_breathing_sessions" ON breathing_sessions FOR ALL USING (auth.uid() = user_id);
+CREATE POLICY "own_user_settings" ON user_settings FOR ALL USING (auth.uid() = user_id);

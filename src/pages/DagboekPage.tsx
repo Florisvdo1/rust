@@ -2,6 +2,9 @@ import React, { useState, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '@/store'
 import { PageHeader } from '@/components/PageHeader'
+import { SyncBadge } from '@/components/SyncBadge'
+import { supabase } from '@/lib/supabase'
+import { syncJournalEntry } from '@/lib/sync'
 
 function todayStr() { return new Date().toISOString().split('T')[0] }
 function formatDateNL(d: string) {
@@ -22,7 +25,7 @@ const guidedPrompts = [
 ]
 
 export const DagboekPage: React.FC = () => {
-  const { journalEntries, addJournalEntry, updateJournalEntry } = useStore()
+  const { journalEntries, addJournalEntry, updateJournalEntry, user } = useStore()
   const [showAdd, setShowAdd] = useState(false)
 
   const today = todayStr()
@@ -54,15 +57,24 @@ export const DagboekPage: React.FC = () => {
     const data = { date: today, mood, energy, stress, wentWell, wasDifficult, rememberTomorrow, freewriting }
     if (todayEntry) {
       updateJournalEntry(todayEntry.id, data)
+      if (user?.id && supabase) {
+        const updated = useStore.getState().journalEntries.find(e => e.id === todayEntry.id)
+        if (updated) void syncJournalEntry(user.id, updated)
+      }
     } else {
       addJournalEntry(data)
+      if (user?.id && supabase) {
+        const entries = useStore.getState().journalEntries
+        const newEntry = entries[0]
+        if (newEntry) void syncJournalEntry(user.id, newEntry)
+      }
     }
     setShowAdd(false)
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <PageHeader title="Dagboek" subtitle="Hoe ga je ervoor?" />
+      <PageHeader title="Dagboek" subtitle="Hoe ga je ervoor?" right={<SyncBadge synced={!!user && !!supabase} />} />
       <div className="page-scroll" style={{ padding: '0 var(--space-lg)' }}>
 
         {/* Today card */}

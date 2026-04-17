@@ -4,6 +4,9 @@ import { useStore } from '@/store'
 import { PageHeader } from '@/components/PageHeader'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { Snackbar } from '@/components/Snackbar'
+import { SyncBadge } from '@/components/SyncBadge'
+import { supabase } from '@/lib/supabase'
+import { syncNote, deleteCloudNote } from '@/lib/sync'
 import type { Note } from '@/types'
 
 const noteCategories = ['Algemeen', 'Persoonlijk', 'Werk', 'Gezondheid', 'Boodschappen', 'Ideeën', 'Afspraken', 'Financiën']
@@ -19,7 +22,7 @@ const noteTemplates = [
 type Filter = 'all' | 'pinned' | 'urgent' | 'done'
 
 export const OnthoudenPage: React.FC = () => {
-  const { notes, addNote, updateNote, removeNote } = useStore()
+  const { notes, addNote, updateNote, removeNote, user } = useStore()
   const [showAdd, setShowAdd] = useState(false)
   const [editId, setEditId] = useState<string | null>(null)
   const [title, setTitle] = useState('')
@@ -60,20 +63,39 @@ export const OnthoudenPage: React.FC = () => {
     if (!title.trim()) return
     if (editId) {
       updateNote(editId, { title, content, category, pinned, urgent })
+      if (user?.id && supabase) {
+        const updated = useStore.getState().notes.find(n => n.id === editId)
+        if (updated) void syncNote(user.id, updated)
+      }
     } else {
       addNote({ title, content, category, pinned, urgent, done: false, archived: false })
+      if (user?.id && supabase) {
+        const newNote = useStore.getState().notes[0]
+        if (newNote) void syncNote(user.id, newNote)
+      }
     }
     resetForm()
   }
 
   const handleDeleteConfirmed = () => {
     const note = notes.find(n => n.id === confirmDeleteId)
-    if (note) { setUndoNote(note); removeNote(note.id); setSnackOpen(true) }
+    if (note) {
+      setUndoNote(note)
+      removeNote(note.id)
+      if (user?.id && supabase) void deleteCloudNote(note.id)
+      setSnackOpen(true)
+    }
     setConfirmDeleteId(null)
   }
 
   const handleUndo = () => {
-    if (undoNote) addNote({ title: undoNote.title, content: undoNote.content, category: undoNote.category, pinned: undoNote.pinned, urgent: undoNote.urgent, done: undoNote.done, archived: undoNote.archived })
+    if (undoNote) {
+      addNote({ title: undoNote.title, content: undoNote.content, category: undoNote.category, pinned: undoNote.pinned, urgent: undoNote.urgent, done: undoNote.done, archived: undoNote.archived })
+      if (user?.id && supabase) {
+        const restored = useStore.getState().notes[0]
+        if (restored) void syncNote(user.id, restored)
+      }
+    }
     setUndoNote(null)
   }
 
@@ -85,7 +107,7 @@ export const OnthoudenPage: React.FC = () => {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <PageHeader title="Onthouden" subtitle="Je externe geheugen" />
+      <PageHeader title="Onthouden" subtitle="Je externe geheugen" right={<SyncBadge synced={!!user && !!supabase} />} />
 
       <div style={{ padding: '0 var(--space-lg)', marginBottom: 12 }}>
         <input type="text" placeholder="Zoek in notities..." value={search}
