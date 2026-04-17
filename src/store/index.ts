@@ -10,8 +10,11 @@ interface AppState {
   // Auth
   user: AuthUser | null
   isGuest: boolean
+  guestDataMigrationDone: boolean
   setUser: (user: AuthUser | null) => void
   setGuest: (guest: boolean) => void
+  setGuestDataMigrationDone: () => void
+  clearUserData: () => void
 
   // Planner
   plannerItems: PlannerItem[]
@@ -60,8 +63,20 @@ export const useStore = create<AppState>()(
       // Auth
       user: null,
       isGuest: false,
+      guestDataMigrationDone: false,
       setUser: (user) => set({ user, isGuest: false }),
       setGuest: (guest) => set({ isGuest: guest }),
+      setGuestDataMigrationDone: () => set({ guestDataMigrationDone: true }),
+      clearUserData: () => set({
+        notes: [],
+        places: [],
+        plannerItems: [],
+        journalEntries: [],
+        healthItems: [{ id: 'default-magnesium', name: 'Magnesium', type: 'supplement', dosage: '400mg', schedule: 'Dagelijks bij het avondeten', createdAt: new Date().toISOString() }],
+        healthLogs: [],
+        dailyHealth: [],
+        breathingSessions: [],
+      }),
 
       // Planner
       plannerItems: [],

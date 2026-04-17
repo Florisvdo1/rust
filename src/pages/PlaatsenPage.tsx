@@ -137,7 +137,7 @@ export const PlaatsenPage: React.FC = () => {
   }, [places])
 
   const saveLabel = saveState === 'saving' ? 'Bezig...' :
-    saveState === 'saved' ? 'Opgeslagen ✓' :
+    saveState === 'saved' ? (uploadError ? 'Lokaal opgeslagen (foto niet in cloud)' : 'Opgeslagen ✓') :
     saveState === 'error' ? 'Kon niet opslaan' :
     uploading ? 'Foto wordt geüpload...' :
     editId ? 'Opslaan' : 'Toevoegen'

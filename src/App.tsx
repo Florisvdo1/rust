@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { BottomNav } from '@/components/BottomNav'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
 import { VandaagPage } from '@/pages/VandaagPage'
 import { PlannerPage } from '@/pages/PlannerPage'
 import { OnthoudenPage } from '@/pages/OnthoudenPage'
@@ -14,12 +15,14 @@ import { useStore } from '@/store'
 import { supabase } from '@/lib/supabase'
 
 export const App: React.FC = () => {
-  const { user, isGuest, setUser } = useStore()
+  const { user, isGuest, setUser, guestDataMigrationDone, setGuestDataMigrationDone, clearUserData, notes, places, plannerItems } = useStore()
   const [authChecked, setAuthChecked] = useState(false)
   const [showAuth, setShowAuth] = useState(false)
+  const [showMigration, setShowMigration] = useState(false)
+  // Track whether the current auth flow came from a guest session
+  const hadGuestDataRef = useRef(false)
 
   useEffect(() => {
-    // Restore session from Supabase if configured
     const checkSession = async () => {
       if (supabase) {
         const { data } = await supabase.auth.getSession()
@@ -29,8 +32,10 @@ export const App: React.FC = () => {
             email: data.session.user.email ?? '',
             username: (data.session.user.user_metadata?.username as string) ?? data.session.user.email?.split('@')[0],
           })
+        } else {
+          // No valid Supabase session — clear any stale persisted user to prevent bypass
+          setUser(null)
         }
-        // Listen for auth state changes
         supabase.auth.onAuthStateChange((_event, session) => {
           if (session?.user) {
             setUser({
@@ -50,11 +55,22 @@ export const App: React.FC = () => {
 
   useEffect(() => {
     if (authChecked && !user && !isGuest) {
+      // Capture whether there is existing local data before auth screen opens
+      hadGuestDataRef.current = notes.length > 0 || places.length > 0 || plannerItems.length > 0
       setShowAuth(true)
     } else {
       setShowAuth(false)
     }
-  }, [authChecked, user, isGuest])
+  }, [authChecked, user, isGuest]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleAuthComplete = () => {
+    // After a successful login/register, if there was guest data and migration
+    // has never been prompted, show the one-time migration dialog
+    if (hadGuestDataRef.current && !guestDataMigrationDone) {
+      setShowMigration(true)
+    }
+    setShowAuth(false)
+  }
 
   if (!authChecked) {
     return (
@@ -78,7 +94,7 @@ export const App: React.FC = () => {
   if (showAuth) {
     return (
       <AuthPage
-        onComplete={() => setShowAuth(false)}
+        onComplete={handleAuthComplete}
         onGuest={() => setShowAuth(false)}
       />
     )
@@ -101,6 +117,18 @@ export const App: React.FC = () => {
         </div>
         <BottomNav />
       </div>
+
+      {/* One-time guest data migration prompt */}
+      <ConfirmDialog
+        open={showMigration}
+        title="Gast-gegevens gevonden"
+        message="Je hebt eerder notities, plaatsen of andere gegevens als gast aangemaakt. Wil je deze bewaren?"
+        confirmLabel="Bewaren"
+        cancelLabel="Verwijderen"
+        danger={false}
+        onConfirm={() => { setGuestDataMigrationDone(); setShowMigration(false) }}
+        onCancel={() => { clearUserData(); setGuestDataMigrationDone(); setShowMigration(false) }}
+      />
     </BrowserRouter>
   )
 }

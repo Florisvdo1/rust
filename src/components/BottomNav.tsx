@@ -134,7 +134,7 @@ export const BottomNav: React.FC = () => {
         bottom: 0,
         left: 0,
         right: 0,
-        zIndex: 100,
+        zIndex: 89,
         display: 'flex',
         justifyContent: 'center',
         alignItems: 'flex-end',
@@ -186,7 +186,7 @@ export const BottomNav: React.FC = () => {
         right: 0,
         display: 'flex',
         justifyContent: 'center',
-        zIndex: 101,
+        zIndex: 89,
         pointerEvents: 'none',
       }}>
         <button
