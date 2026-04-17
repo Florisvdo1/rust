@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react'
+import React, { useState, useMemo, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '@/store'
 import { PageHeader } from '@/components/PageHeader'
@@ -39,6 +39,30 @@ export const PlaatsenPage: React.FC = () => {
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
+
+  // Signed display URLs keyed by place ID (not persisted — regenerated on mount/places change)
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({})
+
+  const isStoragePath = (url: string) =>
+    !!url && !url.startsWith('http') && !url.startsWith('data:') && !url.startsWith('blob:')
+
+  useEffect(() => {
+    if (!supabase || !user) return
+    const toSign = places.filter(p => p.imageUrl && isStoragePath(p.imageUrl) && !signedUrls[p.id])
+    if (!toSign.length) return
+    Promise.all(
+      toSign.map(async p => {
+        const { data } = await supabase!.storage.from('user-photos').createSignedUrl(p.imageUrl!, 3600)
+        return [p.id, data?.signedUrl ?? null] as const
+      })
+    ).then(results => {
+      setSignedUrls(prev => {
+        const next = { ...prev }
+        results.forEach(([id, url]) => { if (url) next[id] = url })
+        return next
+      })
+    })
+  }, [places, user?.id]) // eslint-disable-line
 
   const filtered = useMemo(() => {
     let list = places
@@ -91,10 +115,8 @@ export const PlaatsenPage: React.FC = () => {
         if (error) {
           setUploadError('Foto als preview opgeslagen. Cloud upload mislukt.')
         } else {
-          const { data: urlData } = supabase.storage
-            .from('user-photos')
-            .getPublicUrl(path)
-          setImageUrl(urlData.publicUrl)
+          // Store the storage path, not a URL — signed URLs are generated at render time
+          setImageUrl(path)
         }
       } catch {
         setUploadError('Foto als preview opgeslagen. Cloud upload mislukt.')
@@ -137,7 +159,11 @@ export const PlaatsenPage: React.FC = () => {
     setWherePrecisely(p.wherePrecisely || ''); setSubzone(p.subzone || '')
     setContainer(p.container || ''); setPosition(p.position || '')
     setNotes(p.notes || ''); setImageUrl(p.imageUrl || '')
-    setImagePreview(p.imageUrl || null); setSaveState('idle')
+    // Use signed URL for preview if the stored value is a storage path
+    const preview = p.imageUrl
+      ? (isStoragePath(p.imageUrl) ? (signedUrls[p.id] || null) : p.imageUrl)
+      : null
+    setImagePreview(preview); setSaveState('idle')
     setShowAdd(true)
   }
 
@@ -216,15 +242,21 @@ export const PlaatsenPage: React.FC = () => {
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     flexShrink: 0, overflow: 'hidden',
                   }}>
-                    {p.imageUrl ? (
-                      <img src={p.imageUrl} alt={p.objectLabel}
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : (
-                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
-                        stroke="var(--soft-blue)" strokeWidth="1.8" strokeLinecap="round">
-                        <path d="M3 12l9-9 9 9"/><path d="M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
-                      </svg>
-                    )}
+                    {(() => {
+                      const displayUrl = p.imageUrl
+                        ? (isStoragePath(p.imageUrl) ? signedUrls[p.id] : p.imageUrl)
+                        : undefined
+                      return displayUrl ? (
+                        <img src={displayUrl} alt={p.objectLabel}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none' }} />
+                      ) : (
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                          stroke="var(--soft-blue)" strokeWidth="1.8" strokeLinecap="round">
+                          <path d="M3 12l9-9 9 9"/><path d="M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/>
+                        </svg>
+                      )
+                    })()}
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <h3 style={{ fontSize: 15, fontWeight: 600 }}>{p.objectLabel}</h3>
