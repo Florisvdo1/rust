@@ -3,11 +3,11 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '@/store'
 import { PageHeader } from '@/components/PageHeader'
 import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { SheetHeader } from '@/components/SheetHeader'
+import { downloadFile } from '@/lib/download'
 import { supabase } from '@/lib/supabase'
 
 type Screen = 'profiel' | 'privacy' | 'export' | 'about' | 'hulp' | 'toegankelijkheid' | null
-
-// ─── Small reusable sub-components ────────────────────────────────────────────
 
 const Toggle: React.FC<{ label: string; value: boolean; onChange: (v: boolean) => void; description?: string }> = ({ label, value, onChange, description }) => (
   <button onClick={() => onChange(!value)} style={{
@@ -46,23 +46,6 @@ const MenuItem: React.FC<{ label: string; icon: React.ReactNode; onClick?: () =>
   </button>
 )
 
-const SheetHeader: React.FC<{ title: string; onClose: () => void }> = ({ title, onClose }) => (
-  <>
-    <button
-      onClick={onClose}
-      style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 6px', flexShrink: 0, width: '100%' }}
-      aria-label="Sluiten"
-    >
-      <div style={{ width: 36, height: 4, borderRadius: 2, background: 'var(--border-strong)' }} />
-    </button>
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 var(--space-xl)', marginBottom: 4, flexShrink: 0 }}>
-      <h3 style={{ fontSize: 18, fontWeight: 700 }}>{title}</h3>
-      <button onClick={onClose} style={{ width: 32, height: 32, borderRadius: '50%', background: 'var(--cloud)', fontSize: 18, color: 'var(--text-muted)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>×</button>
-    </div>
-  </>
-)
-
-// ─── Main component ────────────────────────────────────────────────────────────
 
 export const MeerPage: React.FC = () => {
   const {
@@ -84,10 +67,12 @@ export const MeerPage: React.FC = () => {
   const [resetEmail, setResetEmail] = useState(user?.email || '')
   const [resetSent, setResetSent] = useState(false)
 
-  // Apply accessibility body classes
   useEffect(() => {
-    document.body.classList.toggle('larger-text', settings.largerText || false)
-    document.body.classList.toggle('reduce-motion', settings.reduceMotion || false)
+    document.body.classList.toggle('larger-text', settings.largerText ?? false)
+    document.body.classList.toggle('reduce-motion', settings.reduceMotion ?? false)
+    return () => {
+      document.body.classList.remove('larger-text', 'reduce-motion')
+    }
   }, [settings.largerText, settings.reduceMotion])
 
   const handleLogout = async () => {
@@ -125,26 +110,8 @@ export const MeerPage: React.FC = () => {
   }
 
   const handleExportJSON = () => {
-    const data = {
-      exportedAt: new Date().toISOString(),
-      version: '1.2.0',
-      plannerItems,
-      notes,
-      places,
-      journalEntries,
-      healthItems,
-      healthLogs,
-      dailyHealth,
-      breathingSessions,
-      settings,
-    }
-    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `rust-export-${new Date().toISOString().split('T')[0]}.json`
-    document.body.appendChild(a); a.click()
-    document.body.removeChild(a); URL.revokeObjectURL(url)
+    const data = { exportedAt: new Date().toISOString(), version: '1.2.0', plannerItems, notes, places, journalEntries, healthItems, healthLogs, dailyHealth, breathingSessions, settings }
+    downloadFile(JSON.stringify(data, null, 2), `rust-export-${new Date().toISOString().split('T')[0]}.json`, 'application/json')
   }
 
   const handleExportCSV = () => {
@@ -156,13 +123,7 @@ export const MeerPage: React.FC = () => {
       ...journalEntries.map(e => ['Dagboek', e.date, `Stemming ${e.mood}/5`, e.wentWell.slice(0, 60)]),
     ]
     const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')).join('\n')
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement('a')
-    a.href = url
-    a.download = `rust-export-${new Date().toISOString().split('T')[0]}.csv`
-    document.body.appendChild(a); a.click()
-    document.body.removeChild(a); URL.revokeObjectURL(url)
+    downloadFile(csv, `rust-export-${new Date().toISOString().split('T')[0]}.csv`, 'text/csv;charset=utf-8;')
   }
 
   const openScreen = (s: Screen) => {

@@ -198,7 +198,7 @@ export const OnthoudenPage: React.FC = () => {
         message="Notitie verwijderd"
         actionLabel="Ongedaan"
         onAction={handleUndo}
-        onClose={() => setSnackOpen(false)}
+        onClose={() => { setSnackOpen(false); setUndoNote(null) }}
       />
 
       {/* Add/Edit Sheet */}

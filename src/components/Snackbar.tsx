@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface SnackbarProps {
@@ -18,11 +18,14 @@ export const Snackbar: React.FC<SnackbarProps> = ({
   onClose,
   duration = 4000,
 }) => {
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
+
   useEffect(() => {
     if (!open) return
-    const t = setTimeout(onClose, duration)
+    const t = setTimeout(() => onCloseRef.current(), duration)
     return () => clearTimeout(t)
-  }, [open, duration, onClose])
+  }, [open, duration])
 
   return (
     <AnimatePresence>

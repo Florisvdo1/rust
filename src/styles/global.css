@@ -262,6 +262,27 @@ body.nav-collapsed .page-scroll {
   transform: scale(0.97);
 }
 
+.btn-danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-xl);
+  background: var(--danger);
+  color: var(--white);
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  font-size: 15px;
+  min-height: 48px;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+}
+
+.btn-danger:active {
+  transform: scale(0.97);
+  opacity: 0.9;
+}
+
 /* ─── Input styles ────────────────────────────────────────────────── */
 .input-field {
   width: 100%;

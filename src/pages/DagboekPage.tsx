@@ -121,32 +121,34 @@ export const DagboekPage: React.FC = () => {
           <div>
             <h2 style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, color: 'var(--granite-blue)' }}>Eerdere invoeren</h2>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {recentEntries.map(entry => (
-                <motion.div key={entry.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-                  style={{
-                    background: 'var(--white)', borderRadius: 'var(--radius-lg)',
-                    padding: 'var(--space-lg)', border: '1px solid var(--border)',
-                  }}
-                >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-                    <span style={{ fontSize: 22 }}>{moodEmoji[entry.mood]}</span>
-                    <div style={{ flex: 1 }}>
-                      <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--granite-blue)' }}>
-                        {formatDateNL(entry.date)}
-                      </p>
-                      <p style={{ fontSize: 12, color: moodColors[entry.mood], fontWeight: 600 }}>
-                        {moodLabels[entry.mood]} · Energie {entry.energy}/5
-                      </p>
+              {recentEntries.map(entry => {
+                const previewText = entry.wentWell || entry.wasDifficult
+                return (
+                  <motion.div key={entry.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                    style={{
+                      background: 'var(--white)', borderRadius: 'var(--radius-lg)',
+                      padding: 'var(--space-lg)', border: '1px solid var(--border)',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                      <span style={{ fontSize: 22 }}>{moodEmoji[entry.mood]}</span>
+                      <div style={{ flex: 1 }}>
+                        <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--granite-blue)' }}>
+                          {formatDateNL(entry.date)}
+                        </p>
+                        <p style={{ fontSize: 12, color: moodColors[entry.mood], fontWeight: 600 }}>
+                          {moodLabels[entry.mood]} · Energie {entry.energy}/5
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                  {(entry.wentWell || entry.wasDifficult) && (
-                    <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, marginTop: 4 }}>
-                      {(entry.wentWell || entry.wasDifficult).slice(0, 80)}
-                      {(entry.wentWell || entry.wasDifficult).length > 80 ? '...' : ''}
-                    </p>
-                  )}
-                </motion.div>
-              ))}
+                    {previewText && (
+                      <p style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.4, marginTop: 4 }}>
+                        {previewText.slice(0, 80)}{previewText.length > 80 ? '...' : ''}
+                      </p>
+                    )}
+                  </motion.div>
+                )
+              })}
             </div>
           </div>
         )}

@@ -66,15 +66,8 @@ export const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             </button>
             <button
               onClick={onConfirm}
-              style={{
-                flex: 1,
-                minHeight: 44,
-                borderRadius: 'var(--radius-full)',
-                background: danger ? 'var(--danger)' : 'var(--granite-blue)',
-                color: 'var(--white)',
-                fontWeight: 600,
-                fontSize: 15,
-              }}
+              className={danger ? 'btn-danger' : 'btn-primary'}
+              style={{ flex: 1 }}
             >
               {confirmLabel}
             </button>
