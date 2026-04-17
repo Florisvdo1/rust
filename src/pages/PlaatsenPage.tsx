@@ -87,7 +87,7 @@ export const PlaatsenPage: React.FC = () => {
           .from('user-photos')
           .upload(path, file, { upsert: true })
         if (error) {
-          setUploadError('Foto opgeslagen als preview. Cloud upload mislukt.')
+          setUploadError('Foto als preview opgeslagen. Cloud upload mislukt.')
         } else {
           const { data: urlData } = supabase.storage
             .from('user-photos')
@@ -95,7 +95,7 @@ export const PlaatsenPage: React.FC = () => {
           setImageUrl(urlData.publicUrl)
         }
       } catch {
-        setUploadError('Upload mislukt. Foto is als preview opgeslagen.')
+        setUploadError('Foto als preview opgeslagen. Cloud upload mislukt.')
       }
       setUploading(false)
     } else if (!user) {
@@ -454,7 +454,7 @@ export const PlaatsenPage: React.FC = () => {
                 </button>
                 {!user && (
                   <p style={{ fontSize: 11, color: 'var(--text-muted)', textAlign: 'center', marginTop: 6 }}>
-                    Niet ingelogd — data wordt lokaal opgeslagen
+                    Niet ingelogd — gegevens worden lokaal opgeslagen
                   </p>
                 )}
               </div>

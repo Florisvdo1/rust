@@ -72,7 +72,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onComplete, onGuest }) => {
       })
       onComplete()
     } else {
-      setError('Geen sessie ontvangen. Bevestig je e-mailadres en probeer opnieuw.')
+      setError('Bevestig je e-mailadres via de link in je inbox, dan kun je inloggen.')
     }
     setLoading(false)
   }
