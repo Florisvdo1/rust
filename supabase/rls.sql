@@ -85,8 +85,8 @@ BEGIN
     v_username := v_username || '_' || floor(random() * 9000 + 1000)::text;
   END LOOP;
 
-  INSERT INTO public.profiles (id, username)
-  VALUES (new.id, v_username)
+  INSERT INTO public.profiles (id, username, email)
+  VALUES (new.id, v_username, new.email)
   ON CONFLICT (id) DO NOTHING;
 
   RETURN new;

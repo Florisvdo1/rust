@@ -100,7 +100,9 @@ export const MeerPage: React.FC = () => {
 
   const handlePasswordReset = async () => {
     if (!supabase || !resetEmail.trim()) { setProfileMsg('Vul je e-mailadres in.'); return }
-    await supabase.auth.resetPasswordForEmail(resetEmail.trim())
+    await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
+      redirectTo: window.location.origin + '/reset-password',
+    })
     setResetSent(true)
   }
 

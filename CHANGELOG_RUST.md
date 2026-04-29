@@ -1,5 +1,42 @@
 # RUST Changelog
 
+## v1.4.0 — Auth Hardening & Email Verification (2026-04-29)
+
+### Auth Flows
+- `/verify` route: email verification callback with Dutch states (checking, success, expired, error, no_code)
+- `/reset-password` route: password reset form with show/hide password toggles
+- `AuthPage`: forgot-password mode, resend verification after unconfirmed login, `emailRedirectTo` on signup
+- `supabase.ts`: `detectSessionInUrl` changed from `false` → `true` — was silently breaking all auth callbacks
+- `MeerPage`: `resetPasswordForEmail` now includes `redirectTo: origin + '/reset-password'`
+- Email regex tightened to require ≥2 alpha chars in TLD (`/^[^\s@]+@[^\s@]+\.[a-zA-Z]{2,}$/`)
+
+### Modal
+- `ConfirmDialog`: flex-centering wrapper replaces CSS transform approach; fixes Framer Motion transform conflict causing off-center positioning on mobile
+
+### Supabase SQL (idempotent)
+- `profiles`: `email TEXT` and `updated_at TIMESTAMPTZ` columns added
+- `handle_new_user` trigger: stores `new.email` in INSERT
+
+### Docs
+- `README_DEPLOY.md`: Auth Email Configuration section (URL config, Dutch templates, Resend/SMTP, DNS)
+
+## v1.3.0 — Cloud Sync & Portal Dialogs (2026-04-20)
+
+### Cloud Sync
+- All modules (Planner, Onthouden, Plaatsen, Dagboek, Gezondheid, Ademhaling) sync to Supabase when logged in
+- Sync status badges: uploading / cloud saved / local only
+- Row Level Security on all tables
+
+### Supabase
+- `schema.sql`: RLS enabled on all tables, policies added
+- `rls.sql`: full per-user policy set
+
+## v1.2.0 — Health Planner Integration (2026-04-18)
+
+### Health → Planner
+- Supplements and medication schedulable from Gezondheid into Planner
+- New planner fields: `source`, `health_type`, `health_dosage`, `health_quantity`, `health_note`
+
 ## v1.1.0 — V5/V6 Mobile UX Repair (2026-04-15)
 
 ### Navigation

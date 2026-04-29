@@ -150,6 +150,10 @@ ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS start_tone BOOLEAN DEFAULT FA
 ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS larger_text BOOLEAN DEFAULT FALSE;
 ALTER TABLE user_settings ADD COLUMN IF NOT EXISTS reduce_motion BOOLEAN DEFAULT FALSE;
 
+-- Auth hardening (v1.4.0)
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS email TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
 -- Health planner scheduling fields (v1.2.0)
 ALTER TABLE planner_items ADD COLUMN IF NOT EXISTS source TEXT;
 ALTER TABLE planner_items ADD COLUMN IF NOT EXISTS health_type TEXT;

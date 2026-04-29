@@ -11,6 +11,8 @@ import { GezondheidPage } from '@/pages/GezondheidPage'
 import { AdemhalingPage } from '@/pages/AdemhalingPage'
 import { MeerPage } from '@/pages/MeerPage'
 import { AuthPage } from '@/pages/AuthPage'
+import { VerifyPage } from '@/pages/VerifyPage'
+import { ResetPasswordPage } from '@/pages/ResetPasswordPage'
 import { useStore } from '@/store'
 import { supabase } from '@/lib/supabase'
 import { loadCloudData, migrateGuestDataToCloud } from '@/lib/sync'
@@ -99,6 +101,11 @@ export const App: React.FC = () => {
     setShowMigration(false)
     // Cloud load effect fires automatically when showMigration → false
   }
+
+  // Public auth callback routes — bypass auth guard entirely (hooks still run above)
+  const currentPath = window.location.pathname
+  if (currentPath === '/verify') return <VerifyPage />
+  if (currentPath === '/reset-password') return <ResetPasswordPage />
 
   if (!authChecked) {
     return (
